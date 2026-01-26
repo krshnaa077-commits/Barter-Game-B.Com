@@ -3,25 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DIV-A BarterQuest</title>
+    <title>🤝 BarterQuest Pro</title>
     <style>
-        :root { --primary: #6366f1; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: sans-serif; background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%); margin: 0; padding: 10px; color: #1e293b; min-height: 100vh; }
-        .app-container { max-width: 500px; margin: 0 auto; background: var(--bg); border-radius: 24px; min-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; }
-        header { padding: 20px; text-align: center; background: white; border-bottom: 1px solid #e2e8f0; }
-        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        :root {
+            --primary: #8b5cf6;
+            --accent: #d946ef;
+            --success: #10b981;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(15, 23, 42, 0.8);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #312e81, #0f172a);
+            color: #f8fafc;
+            margin: 0;
+            padding: 15px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            padding: 25px 20px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; letter-spacing: -1px; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; }
-        .card.selected { border-color: var(--primary); background: #eef2ff; transform: scale(0.95); }
-        .emoji { font-size: 1.8rem; display: block; }
-        .label { font-size: 0.7rem; font-weight: bold; }
-        .controls-panel { background: white; padding: 20px; border-radius: 20px 20px 0 0; margin-top: auto; }
-        select, button { width: 100%; height: 50px; border-radius: 12px; font-size: 1rem; margin-bottom: 10px; border: 1px solid #cbd5e1; }
-        .btn-main { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;}
-        .btn-trade { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer;}
-        .history-box { background: #f1f5f9; border-radius: 12px; padding: 10px; font-size: 0.8rem; max-height: 120px; overflow-y: auto; }
-        .history-item { padding: 5px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+
+        /* Inventory Grid */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px 5px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .card.selected {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: var(--primary);
+            transform: scale(0.9);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .emoji { font-size: 2rem; display: block; margin-bottom: 8px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2)); }
+        .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #cbd5e1; }
+
+        /* Controls */
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 30px 30px 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        select {
+            appearance: none;
+            background: #1e293b;
+            color: white;
+            padding: 0 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 12px;
+            width: 100%;
+            height: 54px;
+            border-radius: 16px;
+        }
+
+        button {
+            width: 100%;
+            height: 54px;
+            border-radius: 16px;
+            border: none;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-main { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+        .btn-trade { background: var(--success); color: white; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3); }
+        .btn-trade:disabled { background: #475569; opacity: 0.5; box-shadow: none; }
+
+        /* History */
+        .history-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 12px;
+            font-size: 0.85rem;
+            max-height: 140px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item b { color: #f472b6; }
     </style>
 </head>
 <body>
@@ -29,11 +139,13 @@
 <div class="app-container">
     <header>
         <h1>🤝 BarterQuest</h1>
-        <small id="status">Loading...</small>
+        <div id="status" style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px;">SYNCING MARKET...</div>
     </header>
 
     <div id="join-screen" class="screen">
-        <p style="text-align:center;">Select your team. Each team is locked to the first device that claims it.</p>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <p style="color: #94a3b8;">Welcome to the live classroom market.</p>
+        </div>
         <select id="pick-team">
             <option value="1">Team 1</option>
             <option value="2">Team 2</option>
@@ -41,20 +153,26 @@
             <option value="4">Team 4</option>
             <option value="5">Team 5</option>
         </select>
-        <button class="btn-main" onclick="enterGame()">Claim & Enter</button>
+        <button class="btn-main" onclick="enterGame()">CLAIM TEAM ACCESS</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <b id="display-team">TEAM: --</b>
-            <span><span id="card-count">0</span>/10 Cards</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <span style="background: var(--primary); padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;" id="display-team">TEAM --</span>
+            <span style="color: #94a3b8; font-size: 0.9rem;"><b id="card-count" style="color:white">0</b> / 10 Cards</span>
         </div>
+
         <div id="inventory" class="inventory-grid"></div>
+
         <div class="controls-panel">
             <select id="target-team"></select>
-            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Execute Trade</button>
-            <div class="history-box" id="history"></div>
-            <button onclick="adminReset()" style="margin-top:10px; background:none; border:none; color:#94a3b8; font-size:0.7rem; text-decoration:underline;">Admin Reset</button>
+            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>OFFER TRADE</button>
+            
+            <div class="history-box" id="history">
+                <div style="text-align:center; color:#64748b; font-size: 0.75rem;">PRIVATE TRANSACTION LOG</div>
+            </div>
+            
+            <button onclick="adminReset()" style="margin-top:20px; background:none; color:#64748b; font-size:0.7rem; text-decoration:underline;">System Reset (Admin)</button>
         </div>
     </div>
 </div>
@@ -77,127 +195,153 @@
     const db = getDatabase(app);
     const RES = [{ n:'Rice', e:'🍚' }, { n:'Animals', e:'🐄' }, { n:'Food', e:'🍎' }, { n:'Tools', e:'🔧' }, { n:'Shelter', e:'🏠' }];
     
-    let myTeam = localStorage.getItem('bq_team');
+    let myTeam = localStorage.getItem('bq_team_pro');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
-    // 1. Listen for data
     onValue(ref(db, 'gameState'), (snap) => {
         gameState = snap.val();
-        document.getElementById('status').innerText = "Live";
+        document.getElementById('status').innerText = "● LIVE MARKET CONNECTED";
         if(!gameState) initGame();
         else {
             updateDropdowns();
-            if(myTeam) validateAndShow();
+            if(myTeam) validateSession();
         }
     });
 
-    // 2. Strict Access Control
-    window.enterGame = async function() {
-        const teamChoice = document.getElementById('pick-team').value;
-        const snapshot = await get(ref(db, `gameState/teams/${teamChoice}`));
-        const teamData = snapshot.val();
+    async function enterGame() {
+        const choice = document.getElementById('pick-team').value;
+        const snap = await get(ref(db, `gameState/teams/${choice}`));
+        const data = snap.val();
 
-        if (teamData.occupied && teamData.device !== myDevId) {
-            alert("This team is already claimed by another device!");
+        if (data.occupied && data.device !== myDevId) {
+            alert("🛑 Team already claimed by another device!");
             return;
         }
 
-        // Lock team to this device
-        const updates = {};
-        updates[`gameState/teams/${teamChoice}/occupied`] = true;
-        updates[`gameState/teams/${teamChoice}/device`] = myDevId;
+        const up = {};
+        up[`gameState/teams/${choice}/occupied`] = true;
+        up[`gameState/teams/${choice}/device`] = myDevId;
         
-        await update(ref(db), updates);
-        myTeam = teamChoice;
-        localStorage.setItem('bq_team', myTeam);
-        validateAndShow();
-    };
+        await update(ref(db), up);
+        myTeam = choice;
+        localStorage.setItem('bq_team_pro', myTeam);
+        validateSession();
+    }
+    window.enterGame = enterGame;
 
-    function validateAndShow() {
-        // Double check device lock hasn't been bypassed
-        if(gameState.teams[myTeam].device !== myDevId) {
-            localStorage.removeItem('bq_team');
+    function validateSession() {
+        if(!gameState.teams[myTeam] || gameState.teams[myTeam].device !== myDevId) {
+            localStorage.removeItem('bq_team_pro');
             location.reload();
             return;
         }
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
         document.getElementById('display-team').innerText = "TEAM " + myTeam;
-        renderGame();
+        renderInventory();
     }
 
     function initGame() {
         let deck = [];
-        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); });
+        // Generate 10 of each resource (50 total)
+        RES.forEach(r => { 
+            for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); 
+        });
+
         let teams = {};
         for(let t=1; t<=5; t++) {
             teams[t] = { cards: [], logs: [], occupied: false, device: "" };
             let counts = {}; RES.forEach(r => counts[r.n] = 0);
-            while(teams[t].cards.length < 10) {
+            
+            // Loop until team has 10 cards, ensuring no resource gets 4
+            let safety = 0;
+            while(teams[t].cards.length < 10 && safety < 1000) {
                 let idx = Math.floor(Math.random() * deck.length);
                 let card = deck[idx];
-                if(counts[card.type] < 3) {
+                if(counts[card.type] < 3) { // Hard cap at 3
                     counts[card.type]++;
                     teams[t].cards.push(card);
                     deck.splice(idx, 1);
                 }
+                safety++;
             }
         }
         set(ref(db, 'gameState'), { teams: teams });
     }
 
-    function renderGame() {
+    function renderInventory() {
         const team = gameState.teams[myTeam];
         const inv = document.getElementById('inventory');
         inv.innerHTML = '';
+        
         team.cards.forEach(c => {
             const div = document.createElement('div');
             div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
             div.onclick = () => {
                 selectedCards.has(c.id) ? selectedCards.delete(c.id) : selectedCards.add(c.id);
-                renderGame();
+                renderInventory();
             };
             div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             inv.appendChild(div);
         });
+
         document.getElementById('card-count').innerText = team.cards.length;
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
-        document.getElementById('history').innerHTML = team.logs ? 
-            team.logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') : "No private logs";
+
+        const hist = document.getElementById('history');
+        const logs = team.logs || [];
+        hist.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 0.75rem; margin-bottom:5px;">PRIVATE LOG</div>' + 
+            logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('');
     }
 
     window.sendTrade = function() {
         const target = document.getElementById('target-team').value;
-        if(!target) return alert("Select a partner!");
+        if(!target) return alert("Please select a partner team.");
+
         const items = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
         const rem = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
-        const log = items.map(i => i.emoji).join('');
+        const emojiStr = items.map(i => i.emoji).join('');
+
         const up = {};
         up[`gameState/teams/${myTeam}/cards`] = rem;
-        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent T${target}`, t:log}, ...(gameState.teams[myTeam].logs || [])].slice(0,10);
+        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent T${target}`, t:emojiStr}, ...(gameState.teams[myTeam].logs || [])].slice(0,12);
         up[`gameState/teams/${target}/cards`] = [...gameState.teams[target].cards, ...items];
-        up[`gameState/teams/${target}/logs`] = [{m:`From T${myTeam}`, t:log}, ...(gameState.teams[target].logs || [])].slice(0,10);
-        update(ref(db), up).then(() => { selectedCards.clear(); alert("Trade Sent!"); });
+        up[`gameState/teams/${target}/logs`] = [{m:`From T${myTeam}`, t:emojiStr}, ...(gameState.teams[target].logs || [])].slice(0,12);
+
+        update(ref(db), up).then(() => {
+            selectedCards.clear();
+            alert("✨ Trade Successful!");
+        });
     }
 
     function updateDropdowns() {
         const pick = document.getElementById('pick-team');
         const target = document.getElementById('target-team');
-        let tHtml = '<option value="">Trade with...</option>';
+        let tHtml = '<option value="">Select Partner...</option>';
         for(let i=1; i<=5; i++){
             const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
-            pick.querySelector(`option[value="${i}"]`).disabled = isTaken;
+            const opt = pick.querySelector(`option[value="${i}"]`);
+            if(opt) {
+                opt.disabled = isTaken;
+                opt.innerText = isTaken ? `Team ${i} (Locked)` : `Team ${i}`;
+            }
             if(i != myTeam) tHtml += `<option value="${i}">Team ${i}</option>`;
         }
         target.innerHTML = tHtml;
     }
 
-    window.adminReset = function() { if(confirm("Reset entire game?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(()=>location.reload()); }};
+    window.adminReset = function() {
+        if(confirm("DANGER: Wipe all data and unlock all devices?")) {
+            localStorage.clear();
+            set(ref(db, 'gameState'), null).then(() => location.reload());
+        }
+    }
+
     function getDeviceId() {
-        let id = localStorage.getItem('bq_dev_id');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id', id); }
+        let id = localStorage.getItem('bq_dev_id_v3');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id_v3', id); }
         return id;
     }
 </script>
