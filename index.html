@@ -3,176 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🤝 BarterQuest Pro</title>
+    <title>BarterQuest | Strategic Exchange</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #8b5cf6;
-            --accent: #d946ef;
+            --bg-deep: #020617;
+            --card-glass: rgba(15, 23, 42, 0.65);
+            --accent-blue: #38bdf8;
+            --accent-indigo: #6366f1;
+            --neon-cyan: #22d3ee;
             --success: #10b981;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-dark: rgba(15, 23, 42, 0.8);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: radial-gradient(circle at top left, #1e1b4b, #312e81, #0f172a);
-            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.1) 0%, transparent 50%);
+            color: var(--text-main);
             margin: 0;
-            padding: 15px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
+            overflow-x: hidden;
         }
 
-        .app-container {
+        .app-shell {
             width: 100%;
-            max-width: 450px;
-            background: var(--glass-dark);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 32px;
+            max-width: 480px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            gap: 20px;
         }
 
-        header {
-            padding: 25px 20px;
+        /* Hero Section */
+        .hero {
             text-align: center;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+            padding: 40px 0 20px;
         }
 
-        h1 { margin: 0; font-size: 1.8rem; letter-spacing: -1px; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .hidden { display: none !important; }
-
-        /* Inventory Grid */
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(to right, #fff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1.5px;
         }
 
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 15px 5px;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+        .hero p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        .card.selected {
-            background: rgba(139, 92, 246, 0.3);
-            border-color: var(--primary);
-            transform: scale(0.9);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
-        }
-
-        .emoji { font-size: 2rem; display: block; margin-bottom: 8px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2)); }
-        .label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #cbd5e1; }
-
-        /* Controls */
-        .controls-panel {
-            background: rgba(255, 255, 255, 0.03);
+        /* Glass Cards */
+        .glass-panel {
+            background: var(--card-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
             padding: 24px;
-            border-radius: 30px 30px 0 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
-        select {
-            appearance: none;
-            background: #1e293b;
-            color: white;
-            padding: 0 15px;
+        /* Input Styling */
+        .input-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; margin-left: 4px; font-weight: 600; }
+        
+        select, input {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
             border: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 12px;
-            width: 100%;
+            border-radius: 14px;
             height: 54px;
-            border-radius: 16px;
+            padding: 0 16px;
+            color: white;
+            font-size: 1rem;
+            transition: 0.3s;
         }
 
-        button {
+        select:focus, input:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        /* Buttons */
+        .btn-glow {
             width: 100%;
-            height: 54px;
-            border-radius: 16px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-blue));
             border: none;
+            border-radius: 16px;
+            color: white;
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+            transition: 0.3s;
         }
 
-        .btn-main { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
-        .btn-trade { background: var(--success); color: white; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3); }
-        .btn-trade:disabled { background: #475569; opacity: 0.5; box-shadow: none; }
+        .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.6); }
+        .btn-glow:disabled { opacity: 0.4; transform: none; box-shadow: none; }
 
-        /* History */
-        .history-box {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 16px;
+        /* Inventory Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .resource-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 16px 8px;
+            text-align: center;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .resource-card.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--accent-indigo);
+            box-shadow: inset 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .resource-card .emoji { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+        .resource-card .name { font-size: 0.7rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
+
+        /* Transaction History - Private Dashboard Style */
+        .history-container {
+            margin-top: 10px;
+        }
+
+        .history-title {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-title::before { content: ''; width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; }
+
+        .log-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
             padding: 12px;
-            font-size: 0.85rem;
-            max-height: 140px;
-            overflow-y: auto;
-            margin-top: 15px;
-        }
-
-        .history-item {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--accent-indigo);
         }
 
-        .history-item b { color: #f472b6; }
+        .log-item b { color: var(--neon-cyan); font-family: monospace; font-size: 1rem; }
+
+        .hidden { display: none !important; }
+
+        .badge {
+            background: var(--accent-indigo);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <header>
-        <h1>🤝 BarterQuest</h1>
-        <div id="status" style="font-size: 0.7rem; color: #94a3b8; margin-top: 5px;">SYNCING MARKET...</div>
-    </header>
+<div class="app-shell">
+    <section class="hero">
+        <h1>Barter Game</h1>
+        <p>Trade Smart • Think Strategic</p>
+    </section>
 
-    <div id="join-screen" class="screen">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <p style="color: #94a3b8;">Welcome to the live classroom market.</p>
+    <div id="join-screen" class="glass-panel">
+        <div class="input-group">
+            <label>OPERATIONAL UNIT</label>
+            <select id="pick-team">
+                <option value="1">Alpha Team 01</option>
+                <option value="2">Beta Team 02</option>
+                <option value="3">Gamma Team 03</option>
+                <option value="4">Delta Team 04</option>
+                <option value="5">Epsilon Team 05</option>
+            </select>
         </div>
-        <select id="pick-team">
-            <option value="1">Team 1</option>
-            <option value="2">Team 2</option>
-            <option value="3">Team 3</option>
-            <option value="4">Team 4</option>
-            <option value="5">Team 5</option>
-        </select>
-        <button class="btn-main" onclick="enterGame()">CLAIM TEAM ACCESS</button>
+        <button class="btn-glow" onclick="enterGame()">INITIALIZE SESSION</button>
+        <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center; margin-top: 15px;">One device per operational unit. Encryption active.</p>
     </div>
 
-    <div id="game-screen" class="screen hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <span style="background: var(--primary); padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;" id="display-team">TEAM --</span>
-            <span style="color: #94a3b8; font-size: 0.9rem;"><b id="card-count" style="color:white">0</b> / 10 Cards</span>
-        </div>
-
-        <div id="inventory" class="inventory-grid"></div>
-
-        <div class="controls-panel">
-            <select id="target-team"></select>
-            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>OFFER TRADE</button>
-            
-            <div class="history-box" id="history">
-                <div style="text-align:center; color:#64748b; font-size: 0.75rem;">PRIVATE TRANSACTION LOG</div>
+    <div id="game-screen" class="hidden">
+        <div class="glass-panel" style="margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" id="display-team">TEAM --</span>
+                <span style="font-size: 0.8rem; color: var(--text-dim);">ASSETS: <b id="card-count" style="color:white">0</b>/10</span>
             </div>
             
-            <button onclick="adminReset()" style="margin-top:20px; background:none; color:#64748b; font-size:0.7rem; text-decoration:underline;">System Reset (Admin)</button>
+            <div id="inventory" class="grid"></div>
+            
+            <div class="input-group">
+                <label>TARGET PARTNER</label>
+                <select id="target-team"></select>
+            </div>
+            <button id="trade-btn" class="btn-glow" onclick="sendTrade()" disabled>EXECUTE EXCHANGE</button>
+        </div>
+
+        <div class="glass-panel history-container">
+            <div class="history-title">PRIVATE TRANSACTION LEDGER</div>
+            <div id="history-logs">
+                <div style="text-align:center; color: var(--text-dim); padding: 20px; font-size: 0.8rem;">Waiting for first exchange...</div>
+            </div>
+            <button onclick="adminReset()" style="background:none; border:none; color:var(--text-dim); width:100%; margin-top:20px; font-size:0.65rem; text-decoration:underline; cursor:pointer;">SYSTEM MASTER RESET</button>
         </div>
     </div>
 </div>
@@ -195,153 +252,140 @@
     const db = getDatabase(app);
     const RES = [{ n:'Rice', e:'🍚' }, { n:'Animals', e:'🐄' }, { n:'Food', e:'🍎' }, { n:'Tools', e:'🔧' }, { n:'Shelter', e:'🏠' }];
     
-    let myTeam = localStorage.getItem('bq_team_pro');
+    let myTeam = localStorage.getItem('bq_dev_team_v4');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
     onValue(ref(db, 'gameState'), (snap) => {
         gameState = snap.val();
-        document.getElementById('status').innerText = "● LIVE MARKET CONNECTED";
         if(!gameState) initGame();
         else {
-            updateDropdowns();
-            if(myTeam) validateSession();
+            syncInterface();
+            if(myTeam) showDashboard();
         }
     });
 
     async function enterGame() {
         const choice = document.getElementById('pick-team').value;
         const snap = await get(ref(db, `gameState/teams/${choice}`));
-        const data = snap.val();
+        const teamData = snap.val();
 
-        if (data.occupied && data.device !== myDevId) {
-            alert("🛑 Team already claimed by another device!");
+        if (teamData.occupied && teamData.device !== myDevId) {
+            alert("SECURITY ALERT: Unit already claimed by another authorized device.");
             return;
         }
 
-        const up = {};
-        up[`gameState/teams/${choice}/occupied`] = true;
-        up[`gameState/teams/${choice}/device`] = myDevId;
-        
-        await update(ref(db), up);
+        await update(ref(db, {
+            [`gameState/teams/${choice}/occupied`]: true,
+            [`gameState/teams/${choice}/device`]: myDevId
+        }));
+
         myTeam = choice;
-        localStorage.setItem('bq_team_pro', myTeam);
-        validateSession();
+        localStorage.setItem('bq_dev_team_v4', myTeam);
+        showDashboard();
     }
     window.enterGame = enterGame;
 
-    function validateSession() {
+    function showDashboard() {
         if(!gameState.teams[myTeam] || gameState.teams[myTeam].device !== myDevId) {
-            localStorage.removeItem('bq_team_pro');
-            location.reload();
-            return;
+            localStorage.clear(); location.reload(); return;
         }
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
-        document.getElementById('display-team').innerText = "TEAM " + myTeam;
-        renderInventory();
+        document.getElementById('display-team').innerText = "UNIT " + myTeam;
+        renderAssets();
     }
 
-    function initGame() {
-        let deck = [];
-        // Generate 10 of each resource (50 total)
-        RES.forEach(r => { 
-            for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); 
-        });
-
-        let teams = {};
-        for(let t=1; t<=5; t++) {
-            teams[t] = { cards: [], logs: [], occupied: false, device: "" };
-            let counts = {}; RES.forEach(r => counts[r.n] = 0);
-            
-            // Loop until team has 10 cards, ensuring no resource gets 4
-            let safety = 0;
-            while(teams[t].cards.length < 10 && safety < 1000) {
-                let idx = Math.floor(Math.random() * deck.length);
-                let card = deck[idx];
-                if(counts[card.type] < 3) { // Hard cap at 3
-                    counts[card.type]++;
-                    teams[t].cards.push(card);
-                    deck.splice(idx, 1);
-                }
-                safety++;
-            }
-        }
-        set(ref(db, 'gameState'), { teams: teams });
-    }
-
-    function renderInventory() {
+    function renderAssets() {
         const team = gameState.teams[myTeam];
-        const inv = document.getElementById('inventory');
-        inv.innerHTML = '';
+        const container = document.getElementById('inventory');
+        container.innerHTML = '';
         
         team.cards.forEach(c => {
             const div = document.createElement('div');
-            div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
+            div.className = `resource-card ${selectedCards.has(c.id) ? 'active' : ''}`;
             div.onclick = () => {
                 selectedCards.has(c.id) ? selectedCards.delete(c.id) : selectedCards.add(c.id);
-                renderInventory();
+                renderAssets();
             };
-            div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
-            inv.appendChild(div);
+            div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="name">${c.type}</span>`;
+            container.appendChild(div);
         });
 
         document.getElementById('card-count').innerText = team.cards.length;
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
 
-        const hist = document.getElementById('history');
+        // Render Private Logs
+        const logBox = document.getElementById('history-logs');
         const logs = team.logs || [];
-        hist.innerHTML = '<div style="text-align:center; color:#64748b; font-size: 0.75rem; margin-bottom:5px;">PRIVATE LOG</div>' + 
-            logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('');
+        logBox.innerHTML = logs.length ? logs.map(l => `
+            <div class="log-item">
+                <span>${l.m}</span>
+                <b>${l.t}</b>
+            </div>
+        `).join('') : '<div style="text-align:center; color: var(--text-dim); padding: 20px; font-size: 0.8rem;">Waiting for first exchange...</div>';
     }
 
     window.sendTrade = function() {
         const target = document.getElementById('target-team').value;
-        if(!target) return alert("Please select a partner team.");
+        if(!target) return alert("Select a target unit for exchange.");
 
-        const items = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
-        const rem = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
-        const emojiStr = items.map(i => i.emoji).join('');
+        const moving = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
+        const kept = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
+        const icons = moving.map(i => i.emoji).join('');
 
         const up = {};
-        up[`gameState/teams/${myTeam}/cards`] = rem;
-        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent T${target}`, t:emojiStr}, ...(gameState.teams[myTeam].logs || [])].slice(0,12);
-        up[`gameState/teams/${target}/cards`] = [...gameState.teams[target].cards, ...items];
-        up[`gameState/teams/${target}/logs`] = [{m:`From T${myTeam}`, t:emojiStr}, ...(gameState.teams[target].logs || [])].slice(0,12);
+        up[`gameState/teams/${myTeam}/cards`] = kept;
+        up[`gameState/teams/${myTeam}/logs`] = [{m:`DEPARTED → U${target}`, t:icons}, ...(gameState.teams[myTeam].logs || [])].slice(0,8);
+        up[`gameState/teams/${target}/cards`] = [...gameState.teams[target].cards, ...moving];
+        up[`gameState/teams/${target}/logs`] = [{m:`ARRIVED ← U${myTeam}`, t:icons}, ...(gameState.teams[target].logs || [])].slice(0,8);
 
         update(ref(db), up).then(() => {
             selectedCards.clear();
-            alert("✨ Trade Successful!");
+            alert("EXCHANGE VERIFIED");
         });
     }
 
-    function updateDropdowns() {
+    function initGame() {
+        let pool = [];
+        RES.forEach(r => { for(let i=1; i<=10; i++) pool.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); });
+        let teams = {};
+        for(let t=1; t<=5; t++) {
+            teams[t] = { cards: [], logs: [], occupied: false, device: "" };
+            let cnt = {}; RES.forEach(r => cnt[r.n] = 0);
+            while(teams[t].cards.length < 10) {
+                let idx = Math.floor(Math.random() * pool.length);
+                if(cnt[pool[idx].type] < 3) {
+                    cnt[pool[idx].type]++;
+                    teams[t].cards.push(pool.splice(idx, 1)[0]);
+                }
+            }
+        }
+        set(ref(db, 'gameState'), { teams: teams });
+    }
+
+    function syncInterface() {
         const pick = document.getElementById('pick-team');
         const target = document.getElementById('target-team');
-        let tHtml = '<option value="">Select Partner...</option>';
+        let tHtml = '<option value="">Select Target...</option>';
         for(let i=1; i<=5; i++){
             const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
-            const opt = pick.querySelector(`option[value="${i}"]`);
-            if(opt) {
-                opt.disabled = isTaken;
-                opt.innerText = isTaken ? `Team ${i} (Locked)` : `Team ${i}`;
-            }
-            if(i != myTeam) tHtml += `<option value="${i}">Team ${i}</option>`;
+            pick.querySelector(`option[value="${i}"]`).disabled = isTaken;
+            if(i != myTeam) tHtml += `<option value="${i}">Alpha Team 0${i}</option>`;
         }
         target.innerHTML = tHtml;
     }
 
     window.adminReset = function() {
-        if(confirm("DANGER: Wipe all data and unlock all devices?")) {
-            localStorage.clear();
-            set(ref(db, 'gameState'), null).then(() => location.reload());
+        if(confirm("AUTHORIZATION REQUIRED: Full System Wipe?")) {
+            localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload());
         }
     }
 
     function getDeviceId() {
-        let id = localStorage.getItem('bq_dev_id_v3');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id_v3', id); }
+        let id = localStorage.getItem('bq_dev_v4');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_v4', id); }
         return id;
     }
 </script>
