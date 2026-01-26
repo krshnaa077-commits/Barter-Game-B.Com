@@ -5,38 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DIV-A BarterQuest</title>
     <style>
-        :root {
-            --primary: #6366f1; --secondary: #4f46e5; --success: #10b981;
-            --danger: #ef4444; --bg: #f8fafc;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
-            margin: 0; padding: 10px; color: #1e293b; min-height: 100vh;
-        }
-        .app-container {
-            max-width: 500px; margin: 0 auto; background: var(--bg);
-            border-radius: 24px; min-height: 90vh; display: flex;
-            flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
+        :root { --primary: #6366f1; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: sans-serif; background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%); margin: 0; padding: 10px; color: #1e293b; min-height: 100vh; }
+        .app-container { max-width: 500px; margin: 0 auto; background: var(--bg); border-radius: 24px; min-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); overflow: hidden; }
         header { padding: 20px; text-align: center; background: white; border-bottom: 1px solid #e2e8f0; }
-        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
         .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
         .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card {
-            background: white; border: 2px solid #e2e8f0; border-radius: 16px;
-            padding: 12px 5px; text-align: center; transition: all 0.2s; cursor: pointer;
-        }
+        .card { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; }
         .card.selected { border-color: var(--primary); background: #eef2ff; transform: scale(0.95); }
-        .emoji { font-size: 1.8rem; display: block; margin-bottom: 5px; }
-        .label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .emoji { font-size: 1.8rem; display: block; }
+        .label { font-size: 0.7rem; font-weight: bold; }
         .controls-panel { background: white; padding: 20px; border-radius: 20px 20px 0 0; margin-top: auto; }
         select, button { width: 100%; height: 50px; border-radius: 12px; font-size: 1rem; margin-bottom: 10px; border: 1px solid #cbd5e1; }
-        .btn-main { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer;}
+        .btn-main { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;}
         .btn-trade { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer;}
-        .btn-trade:disabled { background: #94a3b8; }
         .history-box { background: #f1f5f9; border-radius: 12px; padding: 10px; font-size: 0.8rem; max-height: 120px; overflow-y: auto; }
         .history-item { padding: 5px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
     </style>
@@ -46,11 +29,11 @@
 <div class="app-container">
     <header>
         <h1>🤝 BarterQuest</h1>
-        <small id="status-text">Connecting...</small>
+        <small id="status">Loading...</small>
     </header>
 
     <div id="join-screen" class="screen">
-        <p style="text-align: center;"><b>Team Claim System</b><br>One device per team. History is private.</p>
+        <p style="text-align:center;">Select your team. Each team is locked to the first device that claims it.</p>
         <select id="pick-team">
             <option value="1">Team 1</option>
             <option value="2">Team 2</option>
@@ -58,7 +41,7 @@
             <option value="4">Team 4</option>
             <option value="5">Team 5</option>
         </select>
-        <button class="btn-main" id="enter-btn" onclick="enterGame()">Claim Team & Enter</button>
+        <button class="btn-main" onclick="enterGame()">Claim & Enter</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
@@ -70,17 +53,15 @@
         <div class="controls-panel">
             <select id="target-team"></select>
             <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Execute Trade</button>
-            <div class="history-box" id="history">
-                <p style="text-align:center; color:#64748b;">Private Logs Only</p>
-            </div>
-            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#94a3b8; text-decoration:underline; font-size:0.7rem;">Full Reset (Admin)</button>
+            <div class="history-box" id="history"></div>
+            <button onclick="adminReset()" style="margin-top:10px; background:none; border:none; color:#94a3b8; font-size:0.7rem; text-decoration:underline;">Admin Reset</button>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCw38ORY-168_FWy-Vclfzwxx5RhEVayOM",
@@ -94,154 +75,126 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-
-    const RES = [
-        { n: 'Rice', e: '🍚' }, { n: 'Animals', e: '🐄' },
-        { n: 'Food', e: '🍎' }, { n: 'Tools', e: '🔧' }, { n: 'Shelter', e: '🏠' }
-    ];
-
-    let myTeam = localStorage.getItem('bq_claimed_team');
+    const RES = [{ n:'Rice', e:'🍚' }, { n:'Animals', e:'🐄' }, { n:'Food', e:'🍎' }, { n:'Tools', e:'🔧' }, { n:'Shelter', e:'🏠' }];
+    
+    let myTeam = localStorage.getItem('bq_team');
+    let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
-    onValue(ref(db, 'gameState'), (snapshot) => {
-        gameState = snapshot.val();
-        document.getElementById('status-text').innerText = "Live Market";
-        if (!gameState) {
-            initGame();
-        } else {
-            updateJoinDropdown();
-            if(myTeam) {
-                showGameScreen();
-                renderGame();
-            }
+    // 1. Listen for data
+    onValue(ref(db, 'gameState'), (snap) => {
+        gameState = snap.val();
+        document.getElementById('status').innerText = "Live";
+        if(!gameState) initGame();
+        else {
+            updateDropdowns();
+            if(myTeam) validateAndShow();
         }
     });
 
-    function initGame() {
-        // Create pool of 50 cards (10 of each type)
-        let deck = [];
-        RES.forEach(r => { 
-            for(let i=1; i<=10; i++) {
-                deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); 
-            }
-        });
+    // 2. Strict Access Control
+    window.enterGame = async function() {
+        const teamChoice = document.getElementById('pick-team').value;
+        const snapshot = await get(ref(db, `gameState/teams/${teamChoice}`));
+        const teamData = snapshot.val();
 
+        if (teamData.occupied && teamData.device !== myDevId) {
+            alert("This team is already claimed by another device!");
+            return;
+        }
+
+        // Lock team to this device
+        const updates = {};
+        updates[`gameState/teams/${teamChoice}/occupied`] = true;
+        updates[`gameState/teams/${teamChoice}/device`] = myDevId;
+        
+        await update(ref(db), updates);
+        myTeam = teamChoice;
+        localStorage.setItem('bq_team', myTeam);
+        validateAndShow();
+    };
+
+    function validateAndShow() {
+        // Double check device lock hasn't been bypassed
+        if(gameState.teams[myTeam].device !== myDevId) {
+            localStorage.removeItem('bq_team');
+            location.reload();
+            return;
+        }
+        document.getElementById('join-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('display-team').innerText = "TEAM " + myTeam;
+        renderGame();
+    }
+
+    function initGame() {
+        let deck = [];
+        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); });
         let teams = {};
         for(let t=1; t<=5; t++) {
             teams[t] = { cards: [], logs: [], occupied: false, device: "" };
-            let counts = {}; 
-            RES.forEach(r => counts[r.n] = 0);
-            
-            // Strictly assign 10 cards per team, cap at 3 per resource
-            let attempts = 0;
-            while(teams[t].cards.length < 10 && attempts < 500) {
-                let randomIndex = Math.floor(Math.random() * deck.length);
-                let card = deck[randomIndex];
-                
+            let counts = {}; RES.forEach(r => counts[r.n] = 0);
+            while(teams[t].cards.length < 10) {
+                let idx = Math.floor(Math.random() * deck.length);
+                let card = deck[idx];
                 if(counts[card.type] < 3) {
                     counts[card.type]++;
                     teams[t].cards.push(card);
-                    deck.splice(randomIndex, 1);
+                    deck.splice(idx, 1);
                 }
-                attempts++;
             }
         }
         set(ref(db, 'gameState'), { teams: teams });
     }
 
-    function updateJoinDropdown() {
-        const select = document.getElementById('pick-team');
-        const targetSelect = document.getElementById('target-team');
-        let targetHtml = '<option value="">Trade with...</option>';
-        
-        for(let i=1; i<=5; i++) {
-            const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== getDeviceId();
-            const option = select.querySelector(`option[value="${i}"]`);
-            if(option) {
-                option.disabled = isTaken;
-                option.innerText = isTaken ? `Team ${i} (Occupied)` : `Team ${i}`;
-            }
-            if(i != myTeam) targetHtml += `<option value="${i}">Team ${i}</option>`;
-        }
-        targetSelect.innerHTML = targetHtml;
-    }
-
-    window.enterGame = function() {
-        const selected = document.getElementById('pick-team').value;
-        if(gameState.teams[selected].occupied) return alert("This team is already taken!");
-
-        const updates = {};
-        updates[`gameState/teams/${selected}/occupied`] = true;
-        updates[`gameState/teams/${selected}/device`] = getDeviceId();
-        
-        update(ref(db), updates).then(() => {
-            myTeam = selected;
-            localStorage.setItem('bq_claimed_team', myTeam);
-            showGameScreen();
-            renderGame();
-        });
-    };
-
-    function showGameScreen() {
-        document.getElementById('join-screen').classList.add('hidden');
-        document.getElementById('game-screen').classList.remove('hidden');
-        document.getElementById('display-team').innerText = "TEAM " + myTeam;
-    }
-
     function renderGame() {
-        const teamData = gameState.teams[myTeam];
+        const team = gameState.teams[myTeam];
         const inv = document.getElementById('inventory');
         inv.innerHTML = '';
-        
-        teamData.cards.forEach(c => {
+        team.cards.forEach(c => {
             const div = document.createElement('div');
             div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
             div.onclick = () => {
-                if(selectedCards.has(c.id)) selectedCards.delete(c.id);
-                else selectedCards.add(c.id);
+                selectedCards.has(c.id) ? selectedCards.delete(c.id) : selectedCards.add(c.id);
                 renderGame();
             };
             div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             inv.appendChild(div);
         });
-
-        document.getElementById('card-count').innerText = teamData.cards.length;
+        document.getElementById('card-count').innerText = team.cards.length;
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
-
-        const hist = document.getElementById('history');
-        hist.innerHTML = teamData.logs && teamData.logs.length > 0 ? 
-            teamData.logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') : 
-            '<p style="text-align:center; color:#64748b;">No private logs yet</p>';
+        document.getElementById('history').innerHTML = team.logs ? 
+            team.logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') : "No private logs";
     }
 
     window.sendTrade = function() {
-        const targetId = document.getElementById('target-team').value;
-        if(!targetId) return alert("Select a partner!");
+        const target = document.getElementById('target-team').value;
+        if(!target) return alert("Select a partner!");
+        const items = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
+        const rem = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
+        const log = items.map(i => i.emoji).join('');
+        const up = {};
+        up[`gameState/teams/${myTeam}/cards`] = rem;
+        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent T${target}`, t:log}, ...(gameState.teams[myTeam].logs || [])].slice(0,10);
+        up[`gameState/teams/${target}/cards`] = [...gameState.teams[target].cards, ...items];
+        up[`gameState/teams/${target}/logs`] = [{m:`From T${myTeam}`, t:log}, ...(gameState.teams[target].logs || [])].slice(0,10);
+        update(ref(db), up).then(() => { selectedCards.clear(); alert("Trade Sent!"); });
+    }
 
-        const itemsToMove = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
-        const remaining = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
-        const logEmoji = itemsToMove.map(i => i.emoji).join('');
-
-        const updates = {};
-        updates[`gameState/teams/${myTeam}/cards`] = remaining;
-        updates[`gameState/teams/${myTeam}/logs`] = [{ m: `Sent to T${targetId}`, t: logEmoji }, ...(gameState.teams[myTeam].logs || [])].slice(0,10);
-        updates[`gameState/teams/${targetId}/cards`] = [...gameState.teams[targetId].cards, ...itemsToMove];
-        updates[`gameState/teams/${targetId}/logs`] = [{ m: `From T${myTeam}`, t: logEmoji }, ...(gameState.teams[targetId].logs || [])].slice(0,10);
-
-        update(ref(db), updates).then(() => {
-            selectedCards.clear();
-            alert("Trade confirmed!");
-        });
-    };
-
-    window.adminReset = function() {
-        if(confirm("DANGER: This resets EVERYTHING for everyone!")) {
-            localStorage.removeItem('bq_claimed_team');
-            set(ref(db, 'gameState'), null).then(() => location.reload());
+    function updateDropdowns() {
+        const pick = document.getElementById('pick-team');
+        const target = document.getElementById('target-team');
+        let tHtml = '<option value="">Trade with...</option>';
+        for(let i=1; i<=5; i++){
+            const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
+            pick.querySelector(`option[value="${i}"]`).disabled = isTaken;
+            if(i != myTeam) tHtml += `<option value="${i}">Team ${i}</option>`;
         }
-    };
+        target.innerHTML = tHtml;
+    }
 
+    window.adminReset = function() { if(confirm("Reset entire game?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(()=>location.reload()); }};
     function getDeviceId() {
         let id = localStorage.getItem('bq_dev_id');
         if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id', id); }
