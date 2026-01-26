@@ -1,226 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Barter Simulator</title>
+  <title>DIV-A Barter Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-  margin:0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#667eea,#764ba2);
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.app {
-  background:white;
-  width:95%;
-  max-width:900px;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.4);
-}
-
-h1,h2 {text-align:center;color:#4338ca}
-
-.hidden {display:none}
-
-.btn {
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:#6366f1;
-  color:white;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.inventory {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(80px,1fr));
-  gap:10px;
-  margin-top:10px;
-}
-
-.card {
-  border:2px solid #e5e7eb;
-  border-radius:12px;
-  padding:10px;
-  text-align:center;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.card.selected {
-  border-color:#6366f1;
-  background:#eef2ff;
-  transform:scale(1.05);
-}
-
-select {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  margin:10px 0;
-}
-</style>
+  <style>
+    body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
+    input, button { padding:10px; margin:6px; border-radius:6px; border:none; }
+    button { background:#22c55e; font-weight:bold; cursor:pointer; }
+    .card { background:#020617; padding:15px; margin:10px; border-radius:10px; }
+  </style>
 </head>
 
 <body>
 
-<div class="app">
+<h1>DIV-A Barter Game</h1>
 
-<!-- JOIN -->
-<div id="joinView">
-<h1>🤝 Barter Simulator</h1>
-<button class="btn" onclick="joinGame()">Enter Game</button>
-<p id="joinMsg" style="text-align:center;color:red"></p>
+<div class="card">
+  <input id="name" placeholder="Enter your name">
+  <input id="team" placeholder="Enter your team">
+  <input id="item" placeholder="Item you offer">
+  <button onclick="joinGame()">Join / Update</button>
 </div>
 
-<!-- GAME -->
-<div id="gameView" class="hidden">
+<h2>Live Market</h2>
+<div id="market"></div>
 
-<h1>🤝 Barter System</h1>
-<h2 id="teamBadge"></h2>
+<!-- FIREBASE -->
+<script type="module">
 
-<h3>Your Inventory</h3>
-<div id="inventory" class="inventory"></div>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<h3>Send To</h3>
-<select id="target">
-<option value="">Select Team</option>
-<option value="1">Team 1</option>
-<option value="2">Team 2</option>
-<option value="3">Team 3</option>
-<option value="4">Team 4</option>
-<option value="5">Team 5</option>
-</select>
+const firebaseConfig = {
+  apiKey: "AIzaSyCw38ORY-168_FWy-Vclfzwxx5RhEVayOM",
+  authDomain: "div-a-bartergame.firebaseapp.com",
+  databaseURL: "https://div-a-bartergame-default-rtdb.firebaseio.com",
+  projectId: "div-a-bartergame",
+  storageBucket: "div-a-bartergame.firebasestorage.app",
+  messagingSenderId: "463648583120",
+  appId: "1:463648583120:web:35e16b08c557b44a781dd5"
+};
 
-<button class="btn" onclick="sendCards()">Send Selected Cards</button>
-<p id="msg" style="text-align:center;font-weight:bold"></p>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const market = document.getElementById("market");
 
-</div>
-</div>
+// Function to join game
+window.joinGame = function () {
+  const name = document.getElementById("name").value;
+  const team = document.getElementById("team").value;
+  const item = document.getElementById("item").value;
 
-<script>
+  if (!name || !team || !item) { alert("Fill all fields"); return; }
 
-const RES = [
- {t:"Rice",e:"🍚"},
- {t:"Animals",e:"🐄"},
- {t:"Food",e:"🍎"},
- {t:"Tools",e:"🔧"},
- {t:"Shelter",e:"🏠"}
-];
+  const playerRef = push(ref(db, "players"));
+  set(playerRef, { name, team, item });
 
-let team=null;
-let selected=new Set();
+  // Clear input fields after joining
+  document.getElementById("name").value = "";
+  document.getElementById("team").value = "";
+  document.getElementById("item").value = "";
+};
 
-function initGame(){
- if(localStorage.getItem("BARTER")) return;
+// Real-time listener (only once)
+onValue(ref(db, "players"), (snap) => {
+  market.innerHTML = "";
+  const data = snap.val();
+  if (!data) return;
 
- let deck=[];
- RES.forEach(r=>{
-   for(let i=0;i<10;i++){
-     deck.push({id:crypto.randomUUID(),...r});
-   }
- });
-
- deck.sort(()=>Math.random()-0.5);
-
- let teams={1:[],2:[],3:[],4:[],5:[]};
- let i=0;
- for(let t=1;t<=5;t++){
-   teams[t]=deck.slice(i,i+10);
-   i+=10;
- }
-
- let state={teams:teams,active:[]};
- localStorage.setItem("BARTER",JSON.stringify(state));
-}
-
-function getState(){
- return JSON.parse(localStorage.getItem("BARTER"));
-}
-
-function saveState(s){
- localStorage.setItem("BARTER",JSON.stringify(s));
-}
-
-function joinGame(){
- initGame();
- let state=getState();
-
- if(sessionStorage.getItem("TEAM")){
-   team=parseInt(sessionStorage.getItem("TEAM"));
- } else {
-   for(let t=1;t<=5;t++){
-     if(!state.active.includes(t)){
-       state.active.push(t);
-       team=t;
-       sessionStorage.setItem("TEAM",t);
-       saveState(state);
-       break;
-     }
-   }
- }
-
- if(!team){
-   document.getElementById("joinMsg").innerText="Game Full";
-   return;
- }
-
- document.getElementById("joinView").classList.add("hidden");
- document.getElementById("gameView").classList.remove("hidden");
- document.getElementById("teamBadge").innerText="Team "+team;
- render();
-}
-
-function render(){
- let state=getState();
- let inv=document.getElementById("inventory");
- inv.innerHTML="";
- selected.clear();
-
- state.teams[team].forEach(c=>{
-   let d=document.createElement("div");
-   d.className="card";
-   d.innerHTML=`<div style="font-size:28px">${c.e}</div><div>${c.t}</div>`;
-   d.onclick=()=>{
-     if(selected.has(c.id)){selected.delete(c.id);d.classList.remove("selected")}
-     else{selected.add(c.id);d.classList.add("selected")}
-   }
-   inv.appendChild(d);
- });
-}
-
-function sendCards(){
- let to=document.getElementById("target").value;
- if(!to || selected.size==0){msg("Select team & cards",true);return;}
-
- let state=getState();
- let mine=state.teams[team];
- let give=mine.filter(c=>selected.has(c.id));
- state.teams[team]=mine.filter(c=>!selected.has(c.id));
- state.teams[to]=state.teams[to].concat(give);
-
- saveState(state);
- msg("Sent "+give.length+" cards to Team "+to,false);
- render();
-}
-
-function msg(t,err){
- let m=document.getElementById("msg");
- m.style.color=err?"red":"green";
- m.innerText=t;
- setTimeout(()=>m.innerText="",3000);
-}
+  for (let key in data) {
+    const p = data[key];
+    market.innerHTML += `<div class="card">
+      <b>${p.name}</b> | Team: ${p.team}<br>
+      Offering: ${p.item}
+    </div>`;
+  }
+});
 
 </script>
+
+
 </body>
 </html>
