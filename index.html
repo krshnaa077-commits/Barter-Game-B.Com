@@ -3,161 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🤝 BarterQuest Elite</title>
+    <title>📜 BarterQuest: Ancient Market</title>
     <style>
         :root {
-            --primary: #818cf8;
-            --secondary: #c084fc;
-            --success: #34d399;
-            --danger: #fb7185;
-            --bg-deep: #020617;
-            --card-glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.1);
+            --paper: #f4e4bc;
+            --ink: #2d241e;
+            --gold: #b28d42;
+            --accent: #8b0000;
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: radial-gradient(circle at top right, #1e1b4b, #020617);
-            color: #f8fafc;
-            margin: 0; padding: 10px;
+            font-family: 'Georgia', serif;
+            /* Using a high-quality old paper texture background */
+            background: #1a140f url('https://www.transparenttextures.com/patterns/dark-matter.png');
+            color: var(--ink);
+            margin: 0;
+            padding: 10px;
             min-height: 100vh;
-            display: flex; justify-content: center;
+            display: flex;
+            justify-content: center;
         }
 
         .app-container {
-            width: 100%; max-width: 480px;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 40px;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 450px;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/old-map.png');
+            border: 8px double var(--gold);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
         }
 
         header {
-            padding: 30px 20px; text-align: center;
-            border-bottom: 1px solid var(--border-glass);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
         }
 
         h1 { 
-            margin: 0; font-size: 2rem; font-weight: 800;
-            background: linear-gradient(to right, #818cf8, #f472b6);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin: 0; 
+            font-variant: small-caps; 
+            font-size: 2.2rem; 
+            color: var(--accent);
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
         }
 
-        .screen { padding: 25px; flex: 1; display: flex; flex-direction: column; animation: slideUp 0.5s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
 
-        /* Inventory */
-        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
         .card {
-            background: var(--card-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 20px 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+            padding: 15px 5px;
             text-align: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s;
             cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
         }
 
         .card.selected {
-            background: rgba(129, 140, 248, 0.2);
-            border-color: var(--primary);
-            transform: scale(0.9) translateY(-5px);
-            box-shadow: 0 10px 20px rgba(129, 140, 248, 0.2);
+            background: var(--gold);
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
         }
 
-        .emoji { font-size: 2.2rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 8px rgba(255,255,255,0.2)); }
-        .label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; color: #94a3b8; }
+        .emoji { font-size: 2.2rem; display: block; filter: sepia(0.3); }
+        .label { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; }
 
-        /* Inputs & Buttons */
         .controls-panel {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 25px; border-radius: 40px 40px 0 0;
-            border-top: 1px solid var(--border-glass);
+            background: rgba(0,0,0,0.05);
+            padding: 20px;
+            border-top: 2px solid var(--gold);
         }
 
-        select {
-            width: 100%; height: 55px; border-radius: 18px;
-            background: #0f172a; color: white; border: 1px solid var(--border-glass);
-            padding: 0 15px; margin-bottom: 15px; font-weight: 500;
+        select, button {
+            width: 100%;
+            height: 50px;
+            border-radius: 0;
+            border: 2px solid var(--ink);
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            margin-bottom: 10px;
         }
 
-        .btn-main {
-            width: 100%; height: 60px; border-radius: 18px; border: none;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            color: white; font-weight: 800; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        select { background: #fffdf5; }
+
+        .btn-trade {
+            background: var(--accent);
+            color: var(--paper);
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
         }
 
-        .btn-trade { background: #10b981; }
-        .btn-trade:disabled { background: #334155; box-shadow: none; opacity: 0.5; }
+        .btn-trade:disabled { background: #999; cursor: not-allowed; }
 
-        /* History Fix */
+        /* Antique History Scroll */
         .history-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px; padding: 15px;
-            margin-top: 20px; max-height: 150px; overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.4);
+            border-left: 4px solid var(--accent);
+            padding: 10px;
+            font-size: 0.85rem;
+            max-height: 150px;
+            overflow-y: auto;
+            font-style: italic;
         }
 
-        .history-title { text-align: center; font-size: 0.7rem; color: #64748b; margin-bottom: 10px; font-weight: bold; }
-        
         .history-item {
-            padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex; justify-content: space-between; font-size: 0.85rem;
+            padding: 6px 0;
+            border-bottom: 1px dotted var(--ink);
+            display: flex;
+            justify-content: space-between;
         }
-        
-        .history-item.sent { color: #f43f5e; }
-        .history-item.recv { color: #10b981; }
+
+        .status-ink { font-size: 0.7rem; text-transform: uppercase; color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <h1>BarterQuest</h1>
-        <div id="status" style="font-size: 0.6rem; color: #4ade80; margin-top: 5px;">LIVE NETWORK ACTIVE</div>
+        <div class="status-ink" id="status">📜 ESTABLISHING CONNECTION</div>
+        <h1>Ancient Barter</h1>
     </header>
 
     <div id="join-screen" class="screen">
-        <div style="text-align: center; margin-bottom: 40px;">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🛡️</div>
-            <p style="color: #94a3b8;">Secure Team Connection Required</p>
-        </div>
+        <p style="text-align: center;">Pick your banner. Once claimed, this scroll belongs to your device alone.</p>
         <select id="pick-team">
-            <option value="1">Team 1</option>
-            <option value="2">Team 2</option>
-            <option value="3">Team 3</option>
-            <option value="4">Team 4</option>
-            <option value="5">Team 5</option>
+            <option value="1">Team I</option>
+            <option value="2">Team II</option>
+            <option value="3">Team III</option>
+            <option value="4">Team IV</option>
+            <option value="5">Team V</option>
         </select>
-        <button class="btn-main" onclick="enterGame()">AUTHENTICATE & ENTER</button>
+        <button class="btn-trade" onclick="enterGame()">Claim Banner</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-            <div style="border: 1px solid #818cf8; padding: 5px 15px; border-radius: 12px; background: rgba(129, 140, 248, 0.1);">
-                <span id="display-team" style="font-weight: 800; font-size: 0.8rem; color: #a5b4fc;">TEAM --</span>
-            </div>
-            <span style="font-size: 0.9rem; color: #94a3b8;"><b id="card-count" style="color:white">0</b> / 10 CARDS</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom: 1px solid var(--gold);">
+            <b id="display-team">BANNER I</b>
+            <span><b id="card-count">0</b> Items</span>
         </div>
 
         <div id="inventory" class="inventory-grid"></div>
 
         <div class="controls-panel">
             <select id="target-team"></select>
-            <button id="trade-btn" class="btn-main btn-trade" onclick="sendTrade()" disabled>EXECUTE TRADE</button>
-            
-            <div class="history-box" id="history">
-                <div class="history-title">PRIVATE TRANSACTION LEDGER</div>
-                <div id="log-content"></div>
-            </div>
-            
-            <button onclick="adminReset()" style="margin-top:20px; background:none; border:none; color:#475569; font-size:0.7rem; text-decoration:underline; width:100%;">Emergency System Reset</button>
+            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Dispatch Goods</button>
+            <div class="history-box" id="history"></div>
+            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:var(--accent); font-size:0.7rem; text-decoration:underline; cursor:pointer;">Burn All Records (Reset)</button>
         </div>
     </div>
 </div>
@@ -178,39 +183,30 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const RES = [{ n:'Rice', e:'🍚' }, { n:'Animals', e:'🐄' }, { n:'Food', e:'🍎' }, { n:'Tools', e:'🔧' }, { n:'Shelter', e:'🏠' }];
+    const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Produce', e:'🍎'}, {n:'Tools', e:'🔧'}, {n:'Lumber', e:'🏠'}];
     
-    let myTeam = localStorage.getItem('bq_team_elite');
+    let myTeam = localStorage.getItem('bq_antique_team');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
     onValue(ref(db, 'gameState'), (snap) => {
         gameState = snap.val();
+        document.getElementById('status').innerText = "📜 SCROLL UPDATED";
         if(!gameState) initGame();
         else {
             updateDropdowns();
-            if(myTeam) {
-                if(gameState.teams[myTeam].device === myDevId) {
-                    document.getElementById('join-screen').classList.add('hidden');
-                    document.getElementById('game-screen').classList.remove('hidden');
-                    document.getElementById('display-team').innerText = "TEAM " + myTeam;
-                    renderGame();
-                } else {
-                    localStorage.removeItem('bq_team_elite');
-                    location.reload();
-                }
-            }
+            if(myTeam) validateSession();
         }
     });
 
     async function enterGame() {
         const choice = document.getElementById('pick-team').value;
         const snap = await get(ref(db, `gameState/teams/${choice}`));
-        const team = snap.val();
+        const teamData = snap.val();
 
-        if (team.occupied && team.device !== myDevId) {
-            alert("This team is already active on another device.");
+        if (teamData.occupied && teamData.device !== myDevId) {
+            alert("This banner is already held by another device!");
             return;
         }
 
@@ -220,14 +216,26 @@
         await update(ref(db), up);
         
         myTeam = choice;
-        localStorage.setItem('bq_team_elite', myTeam);
-        renderGame();
+        localStorage.setItem('bq_antique_team', myTeam);
+        validateSession();
     }
     window.enterGame = enterGame;
 
+    function validateSession() {
+        if(!gameState.teams[myTeam] || gameState.teams[myTeam].device !== myDevId) {
+            localStorage.removeItem('bq_antique_team');
+            location.reload();
+            return;
+        }
+        document.getElementById('join-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('display-team').innerText = "BANNER " + (myTeam == 1 ? 'I' : myTeam == 2 ? 'II' : myTeam == 3 ? 'III' : myTeam == 4 ? 'IV' : 'V');
+        renderInventory();
+    }
+
     function initGame() {
         let deck = [];
-        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id:`${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type:r.n, emoji:r.e }); });
+        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); });
         let teams = {};
         for(let t=1; t<=5; t++) {
             teams[t] = { cards: [], logs: [], occupied: false, device: "" };
@@ -245,73 +253,81 @@
         set(ref(db, 'gameState'), { teams: teams });
     }
 
-    function renderGame() {
+    function renderInventory() {
         const team = gameState.teams[myTeam];
         const inv = document.getElementById('inventory');
         inv.innerHTML = '';
-        team.cards.forEach(c => {
+        
+        // Ensure cards exists even if empty
+        const cards = team.cards || [];
+        cards.forEach(c => {
             const div = document.createElement('div');
             div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
             div.onclick = () => {
                 selectedCards.has(c.id) ? selectedCards.delete(c.id) : selectedCards.add(c.id);
-                renderGame();
+                renderInventory();
             };
             div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             inv.appendChild(div);
         });
 
-        document.getElementById('card-count').innerText = team.cards.length;
+        document.getElementById('card-count').innerText = cards.length;
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
 
-        const logContent = document.getElementById('log-content');
+        const hist = document.getElementById('history');
         const logs = team.logs || [];
-        logContent.innerHTML = logs.map(l => `
-            <div class="history-item ${l.m.includes('Sent') ? 'sent' : 'recv'}">
-                <span>${l.m}</span>
-                <b>${l.t}</b>
-            </div>
-        `).join('') || '<div style="text-align:center; padding:10px; color:#475569;">No transactions found</div>';
+        hist.innerHTML = logs.length > 0 ? 
+            logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') : "No transactions recorded.";
     }
 
     window.sendTrade = function() {
         const target = document.getElementById('target-team').value;
-        if(!target) return alert("Select a partner team.");
+        if(!target) return alert("Select a recipient.");
 
-        const items = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
-        const rem = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
-        const tradeString = items.map(i => i.emoji).join('');
+        const currentCards = gameState.teams[myTeam].cards || [];
+        const itemsToMove = currentCards.filter(c => selectedCards.has(c.id));
+        const remaining = currentCards.filter(c => !selectedCards.has(c.id));
+        const emojiStr = itemsToMove.map(i => i.emoji).join('');
 
         const up = {};
-        up[`gameState/teams/${myTeam}/cards`] = rem;
-        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent to T${target}`, t:tradeString}, ...(gameState.teams[myTeam].logs || [])].slice(0,10);
-        up[`gameState/teams/${target}/cards`] = [...gameState.teams[target].cards, ...items];
-        up[`gameState/teams/${target}/logs`] = [{m:`From T${myTeam}`, t:tradeString}, ...(gameState.teams[target].logs || [])].slice(0,10);
+        // Use empty arrays if cards don't exist yet to prevent crashes
+        const targetCards = gameState.teams[target].cards || [];
+        
+        up[`gameState/teams/${myTeam}/cards`] = remaining;
+        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent to B${target}`, t:emojiStr}, ...(gameState.teams[myTeam].logs || [])].slice(0,10);
+        up[`gameState/teams/${target}/cards`] = [...targetCards, ...itemsToMove];
+        up[`gameState/teams/${target}/logs`] = [{m:`From B${myTeam}`, t:emojiStr}, ...(gameState.teams[target].logs || [])].slice(0,10);
 
         update(ref(db), up).then(() => {
             selectedCards.clear();
-            alert("Trade Completed Successfully!");
+            alert("Dispatch Successful.");
         });
     }
 
     function updateDropdowns() {
         const pick = document.getElementById('pick-team');
         const target = document.getElementById('target-team');
-        let tHtml = '<option value="">Trade With...</option>';
+        let tHtml = '<option value="">Dispatch To...</option>';
         for(let i=1; i<=5; i++){
             const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
             pick.querySelector(`option[value="${i}"]`).disabled = isTaken;
-            if(i != myTeam) tHtml += `<option value="${i}">Team ${i}</option>`;
+            if(i != myTeam) tHtml += `<option value="${i}">Banner ${i}</option>`;
         }
         target.innerHTML = tHtml;
     }
 
-    window.adminReset = function() { if(confirm("Reset everything?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(()=>location.reload()); }};
+    window.adminReset = function() {
+        if(confirm("Destroy all records and banners?")) {
+            localStorage.clear();
+            set(ref(db, 'gameState'), null).then(() => location.reload());
+        }
+    }
+
     function getDeviceId() {
-        let id = localStorage.getItem('bq_dev_id_elite');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id_elite', id); }
+        let id = localStorage.getItem('bq_dev_id_antique');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_id_antique', id); }
         return id;
     }
 </script>
-
 </body>
 </html>
