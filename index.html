@@ -1,85 +1,260 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>DIV-A Barter Game</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DIV-A BarterQuest</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
 
-  <style>
-    body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
-    input, button { padding:10px; margin:6px; border-radius:6px; border:none; }
-    button { background:#22c55e; font-weight:bold; cursor:pointer; }
-    .card { background:#020617; padding:15px; margin:10px; border-radius:10px; }
-  </style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
+            margin: 0; padding: 10px; color: #1e293b; min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 500px; margin: 0 auto; background: var(--bg);
+            border-radius: 24px; min-height: 90vh; display: flex;
+            flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header { padding: 20px; text-align: center; background: white; border-bottom: 1px solid #e2e8f0; }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+
+        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+
+        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+
+        .card {
+            background: white; border: 2px solid #e2e8f0; border-radius: 16px;
+            padding: 12px 5px; text-align: center; transition: all 0.2s;
+        }
+
+        .card.selected { border-color: var(--primary); background: #eef2ff; transform: scale(0.95); }
+        .emoji { font-size: 1.8rem; display: block; margin-bottom: 5px; }
+        .label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+        .controls-panel { background: white; padding: 20px; border-radius: 20px 20px 0 0; margin-top: auto; }
+        select, button { width: 100%; height: 50px; border-radius: 12px; font-size: 1rem; margin-bottom: 10px; border: 1px solid #cbd5e1; }
+        .btn-main { background: var(--primary); color: white; border: none; font-weight: 600; cursor: pointer;}
+        .btn-trade { background: var(--success); color: white; border: none; font-weight: bold; cursor: pointer;}
+        .btn-trade:disabled { background: #94a3b8; }
+
+        .history-box { background: #f1f5f9; border-radius: 12px; padding: 10px; font-size: 0.8rem; max-height: 120px; overflow-y: auto; }
+        .history-item { padding: 5px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+    </style>
 </head>
-
 <body>
 
-<h1>DIV-A Barter Game</h1>
+<div class="app-container">
+    <header>
+        <h1>🤝 DIV-A Barter</h1>
+        <small>Real-time Trading</small>
+    </header>
 
-<div class="card">
-  <input id="name" placeholder="Enter your name">
-  <input id="team" placeholder="Enter your team">
-  <input id="item" placeholder="Item you offer">
-  <button onclick="joinGame()">Join / Update</button>
+    <div id="join-screen" class="screen">
+        <p style="text-align: center;">Pick your team to start trading.</p>
+        <select id="pick-team">
+            <option value="1">Team 1</option>
+            <option value="2">Team 2</option>
+            <option value="3">Team 3</option>
+            <option value="4">Team 4</option>
+            <option value="5">Team 5</option>
+        </select>
+        <button class="btn-main" onclick="enterGame()">Enter Game</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <b id="display-team">TEAM: --</b>
+            <span><span id="card-count">0</span> Cards</span>
+        </div>
+
+        <div id="inventory" class="inventory-grid"></div>
+
+        <div class="controls-panel">
+            <select id="target-team">
+                <option value="">Trade with...</option>
+                <option value="1">Team 1</option>
+                <option value="2">Team 2</option>
+                <option value="3">Team 3</option>
+                <option value="4">Team 4</option>
+                <option value="5">Team 5</option>
+            </select>
+            
+            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Send Trade</button>
+            <p id="error" style="color:var(--danger); font-size:0.7rem; text-align:center; margin-bottom: 10px;"></p>
+
+            <div class="history-box" id="history">
+                <p style="text-align:center; color:#64748b;">Activity Log</p>
+            </div>
+            
+            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#94a3b8; text-decoration:underline; font-size:0.7rem;">Admin: Reset Entire Game</button>
+        </div>
+    </div>
 </div>
 
-<h2>Live Market</h2>
-<div id="market"></div>
-
-<!-- FIREBASE -->
 <script type="module">
+    // --- FIREBASE SETUP ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyCw38ORY-168_FWy-Vclfzwxx5RhEVayOM",
+        authDomain: "div-a-bartergame.firebaseapp.com",
+        databaseURL: "https://div-a-bartergame-default-rtdb.firebaseio.com",
+        projectId: "div-a-bartergame",
+        storageBucket: "div-a-bartergame.firebasestorage.app",
+        messagingSenderId: "463648583120",
+        appId: "1:463648583120:web:35e16b08c557b44a781dd5"
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCw38ORY-168_FWy-Vclfzwxx5RhEVayOM",
-  authDomain: "div-a-bartergame.firebaseapp.com",
-  databaseURL: "https://div-a-bartergame-default-rtdb.firebaseio.com",
-  projectId: "div-a-bartergame",
-  storageBucket: "div-a-bartergame.firebasestorage.app",
-  messagingSenderId: "463648583120",
-  appId: "1:463648583120:web:35e16b08c557b44a781dd5"
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const market = document.getElementById("market");
+    // --- GAME CONSTANTS ---
+    const RES = [
+        { n: 'Rice', e: '🍚' }, { n: 'Animals', e: '🐄' },
+        { n: 'Food', e: '🍎' }, { n: 'Tools', e: '🔧' }, { n: 'Shelter', e: '🏠' }
+    ];
 
-// Function to join game
-window.joinGame = function () {
-  const name = document.getElementById("name").value;
-  const team = document.getElementById("team").value;
-  const item = document.getElementById("item").value;
+    let myTeam = null;
+    let gameState = { teams: {} };
+    let selectedCards = new Set();
 
-  if (!name || !team || !item) { alert("Fill all fields"); return; }
+    // --- JOIN LOGIC ---
+    window.enterGame = function() {
+        myTeam = document.getElementById('pick-team').value;
+        document.getElementById('join-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('display-team').innerText = "TEAM " + myTeam;
+        listenToGame();
+    };
 
-  const playerRef = push(ref(db, "players"));
-  set(playerRef, { name, team, item });
+    // --- LISTEN TO DATABASE ---
+    function listenToGame() {
+        onValue(ref(db, 'gameState'), (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                // If database is empty, first user initializes it
+                initGame();
+                return;
+            }
+            gameState = data;
+            renderInventory();
+        });
+    }
 
-  // Clear input fields after joining
-  document.getElementById("name").value = "";
-  document.getElementById("team").value = "";
-  document.getElementById("item").value = "";
-};
+    // --- INITIALIZE GAME (Run once) ---
+    function initGame() {
+        let deck = [];
+        RES.forEach(r => { 
+            for(let i=1; i<=10; i++) {
+                deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); 
+            }
+        });
+        deck.sort(() => Math.random() - 0.5);
 
-// Real-time listener (only once)
-onValue(ref(db, "players"), (snap) => {
-  market.innerHTML = "";
-  const data = snap.val();
-  if (!data) return;
+        let teams = {};
+        for(let t=1; t<=5; t++) {
+            teams[t] = { cards: [], logs: [{m: "System", t: "Game Started"}] };
+            // Give 10 random cards to each team
+            for(let j=0; j<10; j++) {
+                if(deck.length > 0) teams[t].cards.push(deck.pop());
+            }
+        }
+        set(ref(db, 'gameState'), { teams: teams });
+    }
 
-  for (let key in data) {
-    const p = data[key];
-    market.innerHTML += `<div class="card">
-      <b>${p.name}</b> | Team: ${p.team}<br>
-      Offering: ${p.item}
-    </div>`;
-  }
-});
+    // --- RENDER UI ---
+    function renderInventory() {
+        if(!myTeam || !gameState.teams[myTeam]) return;
+        
+        const inv = document.getElementById('inventory');
+        inv.innerHTML = '';
+        
+        const teamData = gameState.teams[myTeam];
+        
+        teamData.cards.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
+            div.onclick = () => {
+                if(selectedCards.has(c.id)) selectedCards.delete(c.id);
+                else selectedCards.add(c.id);
+                renderInventory();
+            };
+            div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
+            inv.appendChild(div);
+        });
 
+        document.getElementById('card-count').innerText = teamData.cards.length;
+        document.getElementById('trade-btn').disabled = selectedCards.size === 0;
+
+        const hist = document.getElementById('history');
+        hist.innerHTML = teamData.logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('');
+    }
+
+    // --- TRADE LOGIC ---
+    window.sendTrade = function() {
+        const targetId = document.getElementById('target-team').value;
+        if (!targetId || targetId == myTeam) {
+            alert("Select a partner team!");
+            return;
+        }
+
+        const myCards = [...gameState.teams[myTeam].cards];
+        const partnerCards = [...gameState.teams[targetId].cards];
+        
+        // Find selected card objects
+        const itemsToMove = myCards.filter(c => selectedCards.has(c.id));
+        const remainingCards = myCards.filter(c => !selectedCards.has(c.id));
+
+        // Logic Check: Max 3 of same type
+        let counts = {};
+        RES.forEach(r => counts[r.n] = partnerCards.filter(c => c.type === r.n).length);
+        for(let item of itemsToMove) {
+            counts[item.type]++;
+            if(counts[item.type] > 3) {
+                document.getElementById('error').innerText = `Partner already has 3 ${item.type}!`;
+                return;
+            }
+        }
+
+        // Prepare Updates
+        const logEmoji = itemsToMove.map(i => i.emoji).join('');
+        
+        const updatedMyLogs = [{ m: `To T${targetId}`, t: logEmoji }, ...gameState.teams[myTeam].logs].slice(0,10);
+        const updatedPartnerLogs = [{ m: `From T${myTeam}`, t: logEmoji }, ...gameState.teams[targetId].logs].slice(0,10);
+
+        // Update Firebase
+        const updates = {};
+        updates[`gameState/teams/${myTeam}/cards`] = remainingCards;
+        updates[`gameState/teams/${myTeam}/logs`] = updatedMyLogs;
+        updates[`gameState/teams/${targetId}/cards`] = [...partnerCards, ...itemsToMove];
+        updates[`gameState/teams/${targetId}/logs`] = updatedPartnerLogs;
+
+        update(ref(db), updates).then(() => {
+            selectedCards.clear();
+            document.getElementById('error').innerText = "";
+            alert("Trade Successful!");
+        });
+    };
+
+    window.adminReset = function() {
+        if(confirm("Reset entire game for EVERYONE?")) {
+            set(ref(db, 'gameState'), null);
+        }
+    };
 </script>
-
 
 </body>
 </html>
