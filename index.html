@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Barter Quest Mobile</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%);
+            margin: 0;
+            padding: 10px;
+            color: #1e293b;
+            overscroll-behavior: contain;
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--bg);
+            border-radius: 24px;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+
+        /* Screens */
+        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+
+        /* Join UI */
+        #join-screen { justify-content: center; align-items: center; text-align: center; }
+        
+        /* Grid System */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 12px 5px;
+            text-align: center;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card.selected {
+            border-color: var(--primary);
+            background: #eef2ff;
+            transform: scale(0.95);
+        }
+
+        .emoji { font-size: 1.8rem; display: block; margin-bottom: 5px; }
+        .label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+        /* Controls */
+        .controls-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 15px -3px rgba(0,0,0,0.05);
+            margin-top: auto;
+        }
+
+        select, button {
+            width: 100%;
+            height: 50px;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-trade {
+            background: var(--success);
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-trade:disabled { background: #94a3b8; }
+
+        /* History */
+        .history-box {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 0.8rem;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>🤝 BarterQuest</h1>
+        <small id="team-tag">Classroom Trading Game</small>
+    </header>
+
+    <div id="join-screen" class="screen">
+        <p>No team assigned yet.</p>
+        <button class="btn-main" onclick="joinGame()">Join Next Team</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <b id="display-team">TEAM: --</b>
+            <span><span id="card-count">0</span>/10 Cards</span>
+        </div>
+
+        <div id="inventory" class="inventory-grid"></div>
+
+        <div class="controls-panel">
+            <select id="target-team">
+                <option value="">Select Partner Team...</option>
+                <option value="1">Team 1</option>
+                <option value="2">Team 2</option>
+                <option value="3">Team 3</option>
+                <option value="4">Team 4</option>
+                <option value="5">Team 5</option>
+            </select>
+            
+            <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Execute Trade</button>
+            <p id="error" style="color:var(--danger); font-size:0.7rem; text-align:center; margin:0 0 10px 0;"></p>
+
+            <div class="history-box" id="history">
+                <p style="text-align:center; color:#64748b;">Transaction History</p>
+            </div>
+            
+            <button onclick="clearAll()" style="margin-top:15px; background:none; border:none; color:#94a3b8; text-decoration:underline; font-size:0.7rem;">Reset Session</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const RES = [
+        { n: 'Rice', e: '🍚' }, { n: 'Animals', e: '🐄' },
+        { n: 'Food', e: '🍎' }, { n: 'Tools', e: '🔧' }, { n: 'Shelter', e: '🏠' }
+    ];
+    let state = { teams: {}, joined: 0 };
+    let selected = new Set();
+
+    function save() { localStorage.setItem('bq_state', JSON.stringify(state)); }
+    
+    function init() {
+        const data = localStorage.getItem('bq_state');
+        if (data) state = JSON.parse(data);
+        else {
+            let deck = [];
+            RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id:${r.n[0]}${i}-${Math.random().toString(36).substr(2,2)}, type:r.n, emoji:r.e }); });
+            deck.sort(() => Math.random() - 0.5);
+            for(let t=1; t<=5; t++) {
+                state.teams[t] = { cards: [], logs: [] };
+                let counts = {}; RES.forEach(r => counts[r.n] = 0);
+                for(let i=deck.length-1; i>=0; i--) {
+                    if(state.teams[t].cards.length < 10 && counts[deck[i].type] < 3) {
+                        counts[deck[i].type]++;
+                        state.teams[t].cards.push(deck.splice(i, 1)[0]);
+                    }
+                }
+            }
+            save();
+        }
+        const myT = sessionStorage.getItem('bq_team');
+        if (myT) renderGame(myT);
+    }
+
+    function joinGame() {
+        if (state.joined >= 5) return alert("Game full");
+        state.joined++;
+        sessionStorage.setItem('bq_team', state.joined);
+        save();
+        renderGame(state.joined);
+    }
+
+    function renderGame(id) {
+        document.getElementById('join-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('display-team').innerText = "TEAM " + id;
+        
+        const inv = document.getElementById('inventory');
+        inv.innerHTML = '';
+        state.teams[id].cards.forEach(c => {
+            const div = document.createElement('div');
+            div.className = card ${selected.has(c.id) ? 'selected' : ''};
+            div.onclick = () => {
+                if(selected.has(c.id)) selected.delete(c.id);
+                else selected.add(c.id);
+                renderGame(id);
+            };
+            div.innerHTML = <span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>;
+            inv.appendChild(div);
+        });
+
+        document.getElementById('card-count').innerText = state.teams[id].cards.length;
+        document.getElementById('trade-btn').disabled = selected.size === 0;
+        
+        const hist = document.getElementById('history');
+        hist.innerHTML = state.teams[id].logs.map(l => <div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>).join('') || 'No trades yet';
+    }
+
+    function sendTrade() {
+        const myId = sessionStorage.getItem('bq_team');
+        const targetId = document.getElementById('target-team').value;
+        if (!targetId || targetId == myId) return alert("Select a valid partner team");
+
+        const items = state.teams[myId].cards.filter(c => selected.has(c.id));
+        const partner = state.teams[targetId];
+
+        // Validation
+        let counts = {};
+        RES.forEach(r => counts[r.n] = partner.cards.filter(c => c.type === r.n).length);
+        for(let item of items) {
+            counts[item.type]++;
+            if(counts[item.type] > 3) return document.getElementById('error').innerText = Partner already has 3 ${item.type}!;
+        }
+
+        // Move
+        state.teams[myId].cards = state.teams[myId].cards.filter(c => !selected.has(c.id));
+        state.teams[targetId].cards.push(...items);
+
+        // Log
+        const logStr = items.map(i => i.emoji).join('');
+        state.teams[myId].logs.unshift({ m: Sent to T${targetId}, t: logStr });
+        state.teams[targetId].logs.unshift({ m: From T${myId}, t: logStr });
+
+        selected.clear();
+        document.getElementById('error').innerText = "";
+        save();
+        renderGame(myId);
+        alert("Trade Complete!");
+    }
+
+    function clearAll() {
+        if(confirm("Reset everything?")) { localStorage.clear(); sessionStorage.clear(); location.reload(); }
+    }
+
+    init();
+</script>
+</body>
+</html>
