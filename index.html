@@ -3,104 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ NEON BARTER</title>
+    <title>⚡ NEON BARTER PRO</title>
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --neon-purple: #bc13fe;
-            --neon-pink: #ff00ff;
-            --bg-dark: #0a0a0f;
-            --card-bg: #161625;
-        }
-
-        body {
-            font-family: 'Orbitron', sans-serif;
-            background-color: var(--bg-dark);
-            background-image: 
-                linear-gradient(rgba(188, 19, 254, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(188, 19, 254, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-            color: white;
-            margin: 0; padding: 10px;
-            min-height: 100vh;
-            display: flex; justify-content: center;
-        }
-
-        .app-container {
-            width: 100%; max-width: 420px;
-            background: rgba(22, 22, 37, 0.95);
-            border: 2px solid var(--neon-blue);
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            overflow: hidden; display: flex; flex-direction: column;
-        }
-
-        header {
-            padding: 20px; text-align: center;
-            border-bottom: 1px solid var(--neon-blue);
-            background: rgba(0, 243, 255, 0.05);
-        }
-
-        h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 3px; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-
+        :root { --blue: #00f3ff; --purple: #bc13fe; --pink: #ff00ff; --bg: #050508; }
+        body { font-family: 'Orbitron', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 420px; background: #0d0d1a; border: 2px solid var(--blue); border-radius: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); overflow: hidden; display: flex; flex-direction: column; min-height: 90vh; }
+        header { padding: 20px; text-align: center; border-bottom: 1px solid var(--blue); background: rgba(0, 243, 255, 0.05); }
+        h1 { margin: 0; font-size: 1.4rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px var(--blue); }
         .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
-
-        /* Inventory */
-        .inventory-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid #2d2d44;
-            border-radius: 12px; padding: 12px 5px;
-            text-align: center; transition: 0.3s; cursor: pointer;
-        }
-
-        .card.selected {
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 15px var(--neon-pink);
-            transform: scale(1.05);
-        }
-
-        .emoji { font-size: 2rem; display: block; margin-bottom: 5px; }
-        .label { font-size: 0.65rem; color: #888; font-weight: bold; }
-
-        /* Controls */
-        .controls-panel {
-            background: #11111d; padding: 20px;
-            border-top: 1px solid var(--neon-purple);
-        }
-
-        select, button {
-            width: 100%; height: 48px; border-radius: 8px;
-            font-size: 0.9rem; margin-bottom: 10px; outline: none;
-        }
-
-        select { background: #1a1a2e; color: white; border: 1px solid var(--neon-purple); padding: 0 10px; }
-
-        .btn-action {
-            background: var(--neon-purple); color: white;
-            border: none; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; box-shadow: 0 0 10px var(--neon-purple);
-        }
-
-        .btn-action:disabled { opacity: 0.3; box-shadow: none; cursor: not-allowed; }
-
-        /* Private Log */
-        .history-box {
-            background: rgba(0,0,0,0.3); border-radius: 10px;
-            padding: 10px; font-size: 0.8rem; max-height: 100px; overflow-y: auto;
-            border: 1px solid #2d2d44;
-        }
-
-        .log-item {
-            padding: 5px 0; border-bottom: 1px solid #222;
-            display: flex; justify-content: space-between; color: #aaa;
-        }
-
-        .log-item b { color: var(--neon-blue); }
+        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .card { background: #161625; border: 1px solid #2d2d44; border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; position: relative; }
+        .card.selected { border-color: var(--pink); box-shadow: 0 0 15px var(--pink); transform: scale(0.95); }
+        .emoji { font-size: 1.8rem; display: block; margin-bottom: 5px; }
+        .label { font-size: 0.6rem; color: #888; font-weight: bold; }
+        .controls { background: #11111d; padding: 20px; border-top: 1px solid var(--purple); }
+        select, button { width: 100%; height: 48px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 10px; outline: none; }
+        select { background: #1a1a2e; color: white; border: 1px solid var(--purple); padding: 0 10px; }
+        .btn-action { background: var(--purple); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-action:disabled { opacity: 0.3; }
+        .history { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; font-size: 0.75rem; max-height: 100px; overflow-y: auto; border: 1px solid #2d2d44; margin-top: 10px; }
+        .log-item { padding: 4px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .log-item b { color: var(--blue); }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -108,12 +32,11 @@
 
 <div class="app-container">
     <header>
-        <div id="status" style="font-size: 0.6rem; color: var(--neon-blue);">SYSTEM: ONLINE</div>
+        <div style="font-size: 0.6rem; color: var(--blue);">NETWORK STATUS: ACTIVE</div>
         <h1>NEON BARTER</h1>
     </header>
 
     <div id="join-screen" class="screen">
-        <p style="text-align:center; color: #888; font-size: 0.8rem;">IDENTIFY TEAM FREQUENCY</p>
         <select id="pick-team">
             <option value="1">CYBER TEAM 1</option>
             <option value="2">CYBER TEAM 2</option>
@@ -121,22 +44,20 @@
             <option value="4">CYBER TEAM 4</option>
             <option value="5">CYBER TEAM 5</option>
         </select>
-        <button class="btn-action" onclick="enterGame()">INITIALIZE CONNECTION</button>
+        <button class="btn-action" onclick="enterGame()">LINK TO FREQUENCY</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 0.8rem;">
-            <span id="display-team" style="color: var(--neon-pink);">TEAM: --</span>
-            <span>DATA: <b id="card-count" style="color: var(--neon-blue);">0</b>/10</span>
+            <span id="display-team" style="color: var(--pink);">--</span>
+            <span id="card-count" style="color: var(--blue);">0/10</span>
         </div>
-
         <div id="inventory" class="inventory-grid"></div>
-
-        <div class="controls-panel">
-            <select id="target-team"></select>
-            <button id="trade-btn" class="btn-action" onclick="sendTrade()" disabled>EXECUTE DATA TRANSFER</button>
-            <div class="history-box" id="history"></div>
-            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#555; font-size:0.6rem; text-decoration:underline; cursor:pointer; width: 100%;">SYSTEM OVERRIDE (RESET)</button>
+        <div class="controls">
+            <select id="target-team"><option value="">Loading Targets...</option></select>
+            <button id="trade-btn" class="btn-action" onclick="sendTrade()" disabled>TRANSFER DATA</button>
+            <div class="history" id="history"></div>
+            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#444; font-size:0.6rem; cursor:pointer; width: 100%;">FACTORY RESET</button>
         </div>
     </div>
 </div>
@@ -159,7 +80,7 @@
     const db = getDatabase(app);
     const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Food', e:'🍎'}, {n:'Tools', e:'🔧'}, {n:'House', e:'🏠'}];
     
-    let myTeam = localStorage.getItem('bq_neon_team');
+    let myTeam = localStorage.getItem('bq_neon_v4');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
@@ -168,33 +89,26 @@
         gameState = snap.val();
         if(!gameState) initGame();
         else {
+            if(myTeam) {
+                document.getElementById('join-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                document.getElementById('display-team').innerText = "LINK: T" + myTeam;
+                renderInventory();
+            }
             updateDropdowns();
-            if(myTeam) validateSession();
         }
     });
 
-    async function enterGame() {
+    window.enterGame = async function() {
         const choice = document.getElementById('pick-team').value;
         const snap = await get(ref(db, `gameState/teams/${choice}`));
-        const data = snap.val();
-        if (data.occupied && data.device !== myDevId) return alert("FREQUENCY TAKEN!");
+        if (snap.val().occupied && snap.val().device !== myDevId) return alert("FREQUENCY TAKEN!");
         
         await update(ref(db), { [`gameState/teams/${choice}/occupied`]: true, [`gameState/teams/${choice}/device`]: myDevId });
         myTeam = choice;
-        localStorage.setItem('bq_neon_team', myTeam);
-        validateSession();
-    }
-    window.enterGame = enterGame;
-
-    function validateSession() {
-        if(!gameState.teams[myTeam] || gameState.teams[myTeam].device !== myDevId) {
-            localStorage.clear(); location.reload(); return;
-        }
-        document.getElementById('join-screen').classList.add('hidden');
-        document.getElementById('game-screen').classList.remove('hidden');
-        document.getElementById('display-team').innerText = "LINK: TEAM " + myTeam;
-        renderInventory();
-    }
+        localStorage.setItem('bq_neon_v4', myTeam);
+        updateDropdowns(); // CRITICAL FIX: Update targets list immediately on login
+    };
 
     function initGame() {
         let deck = [];
@@ -228,9 +142,9 @@
             div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             inv.appendChild(div);
         });
-        document.getElementById('card-count').innerText = (team.cards || []).length;
+        document.getElementById('card-count').innerText = (team.cards || []).length + "/10";
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
-        document.getElementById('history').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "NO DATA LOGS";
+        document.getElementById('history').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "NO LOGS";
     }
 
     window.sendTrade = function() {
@@ -250,23 +164,24 @@
     function updateDropdowns() {
         const pick = document.getElementById('pick-team');
         const target = document.getElementById('target-team');
-        let tHtml = '<option value="">SELECT TARGET...</option>';
+        let tHtml = '<option value="">TRANSFER TO...</option>';
         for(let i=1; i<=5; i++){
-            const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
-            pick.querySelector(`option[value="${i}"]`).disabled = isTaken;
-            // FIXED: Only show OTHER teams in the trade dropdown
-            if(myTeam && i != myTeam) tHtml += `<option value="${i}">CYBER TEAM ${i}</option>`;
+            if(gameState.teams[i]) {
+                const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
+                const opt = pick.querySelector(`option[value="${i}"]`);
+                if(opt) opt.disabled = isTaken;
+                if(myTeam && i != myTeam) tHtml += `<option value="${i}">TARGET: TEAM ${i}</option>`;
+            }
         }
         target.innerHTML = tHtml;
     }
 
     window.adminReset = function() {
-        if(confirm("WIPE ENTIRE GRID?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload()); }
+        if(confirm("WIPE DATA?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload()); }
     }
-
     function getDeviceId() {
-        let id = localStorage.getItem('bq_neon_dev');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_neon_dev', id); }
+        let id = localStorage.getItem('bq_dev_v4');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_v4', id); }
         return id;
     }
 </script>
