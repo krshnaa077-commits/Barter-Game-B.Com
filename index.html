@@ -39,7 +39,6 @@
         .btn-trade:disabled { background: #94a3b8; }
         .history-box { background: #f1f5f9; border-radius: 12px; padding: 10px; font-size: 0.8rem; max-height: 120px; overflow-y: auto; }
         .history-item { padding: 5px 0; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
-        .status-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; background: #fee2e2; color: #ef4444; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -51,7 +50,7 @@
     </header>
 
     <div id="join-screen" class="screen">
-        <p style="text-align: center;">Select your team. Each team can only be used by one device.</p>
+        <p style="text-align: center;"><b>Team Claim System</b><br>One device per team. History is private.</p>
         <select id="pick-team">
             <option value="1">Team 1</option>
             <option value="2">Team 2</option>
@@ -65,16 +64,16 @@
     <div id="game-screen" class="screen hidden">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
             <b id="display-team">TEAM: --</b>
-            <span><span id="card-count">0</span> Cards</span>
+            <span><span id="card-count">0</span>/10 Cards</span>
         </div>
         <div id="inventory" class="inventory-grid"></div>
         <div class="controls-panel">
             <select id="target-team"></select>
             <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Execute Trade</button>
             <div class="history-box" id="history">
-                <p style="text-align:center; color:#64748b;">Your Private History</p>
+                <p style="text-align:center; color:#64748b;">Private Logs Only</p>
             </div>
-            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#94a3b8; text-decoration:underline; font-size:0.7rem;">Game Reset (Admin Only)</button>
+            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#94a3b8; text-decoration:underline; font-size:0.7rem;">Full Reset (Admin)</button>
         </div>
     </div>
 </div>
@@ -105,23 +104,51 @@
     let gameState = null;
     let selectedCards = new Set();
 
-    // --- AUTO LOGIN ---
-    if(myTeam) {
-        showGameScreen();
-    }
-
-    // --- DATABASE LISTENER ---
     onValue(ref(db, 'gameState'), (snapshot) => {
         gameState = snapshot.val();
         document.getElementById('status-text').innerText = "Live Market";
-        
         if (!gameState) {
             initGame();
         } else {
             updateJoinDropdown();
-            if(myTeam) renderGame();
+            if(myTeam) {
+                showGameScreen();
+                renderGame();
+            }
         }
     });
+
+    function initGame() {
+        // Create pool of 50 cards (10 of each type)
+        let deck = [];
+        RES.forEach(r => { 
+            for(let i=1; i<=10; i++) {
+                deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); 
+            }
+        });
+
+        let teams = {};
+        for(let t=1; t<=5; t++) {
+            teams[t] = { cards: [], logs: [], occupied: false, device: "" };
+            let counts = {}; 
+            RES.forEach(r => counts[r.n] = 0);
+            
+            // Strictly assign 10 cards per team, cap at 3 per resource
+            let attempts = 0;
+            while(teams[t].cards.length < 10 && attempts < 500) {
+                let randomIndex = Math.floor(Math.random() * deck.length);
+                let card = deck[randomIndex];
+                
+                if(counts[card.type] < 3) {
+                    counts[card.type]++;
+                    teams[t].cards.push(card);
+                    deck.splice(randomIndex, 1);
+                }
+                attempts++;
+            }
+        }
+        set(ref(db, 'gameState'), { teams: teams });
+    }
 
     function updateJoinDropdown() {
         const select = document.getElementById('pick-team');
@@ -162,27 +189,6 @@
         document.getElementById('display-team').innerText = "TEAM " + myTeam;
     }
 
-    function initGame() {
-        let deck = [];
-        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id: `${r.n[0]}${i}-${Math.random().toString(36).substr(2,4)}`, type: r.n, emoji: r.e }); });
-        deck.sort(() => Math.random() - 0.5);
-
-        let teams = {};
-        for(let t=1; t<=5; t++) {
-            teams[t] = { cards: [], logs: [], occupied: false, device: "" };
-            let counts = {}; RES.forEach(r => counts[r.n] = 0);
-            
-            // Fill team with 10 cards, max 3 of any type
-            for(let i=deck.length-1; i>=0; i--) {
-                if(teams[t].cards.length < 10 && counts[deck[i].type] < 3) {
-                    counts[deck[i].type]++;
-                    teams[t].cards.push(deck.splice(i, 1)[0]);
-                }
-            }
-        }
-        set(ref(db, 'gameState'), { teams: teams });
-    }
-
     function renderGame() {
         const teamData = gameState.teams[myTeam];
         const inv = document.getElementById('inventory');
@@ -204,7 +210,7 @@
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
 
         const hist = document.getElementById('history');
-        hist.innerHTML = teamData.logs.length > 0 ? 
+        hist.innerHTML = teamData.logs && teamData.logs.length > 0 ? 
             teamData.logs.map(l => `<div class="history-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') : 
             '<p style="text-align:center; color:#64748b;">No private logs yet</p>';
     }
@@ -213,9 +219,8 @@
         const targetId = document.getElementById('target-team').value;
         if(!targetId) return alert("Select a partner!");
 
-        const myCards = gameState.teams[myTeam].cards;
-        const itemsToMove = myCards.filter(c => selectedCards.has(c.id));
-        const remaining = myCards.filter(c => !selectedCards.has(c.id));
+        const itemsToMove = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
+        const remaining = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
         const logEmoji = itemsToMove.map(i => i.emoji).join('');
 
         const updates = {};
@@ -231,8 +236,8 @@
     };
 
     window.adminReset = function() {
-        if(confirm("DANGER: This resets the whole game and clears all devices!")) {
-            localStorage.clear();
+        if(confirm("DANGER: This resets EVERYTHING for everyone!")) {
+            localStorage.removeItem('bq_claimed_team');
             set(ref(db, 'gameState'), null).then(() => location.reload());
         }
     };
