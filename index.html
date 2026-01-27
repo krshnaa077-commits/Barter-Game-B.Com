@@ -3,28 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ NEON BARTER PRO</title>
+    <title>⚡ NEON BARTER v5</title>
     <style>
         :root { --blue: #00f3ff; --purple: #bc13fe; --pink: #ff00ff; --bg: #050508; }
         body { font-family: 'Orbitron', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 420px; background: #0d0d1a; border: 2px solid var(--blue); border-radius: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); overflow: hidden; display: flex; flex-direction: column; min-height: 90vh; }
-        header { padding: 20px; text-align: center; border-bottom: 1px solid var(--blue); background: rgba(0, 243, 255, 0.05); }
-        h1 { margin: 0; font-size: 1.4rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px var(--blue); }
-        .screen { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .app-container { width: 100%; max-width: 420px; background: #0d0d1a; border: 1px solid var(--blue); border-radius: 24px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.1); overflow: hidden; display: flex; flex-direction: column; height: 92vh; }
+        
+        /* Neon Header */
+        header { padding: 20px; text-align: center; background: rgba(0, 243, 255, 0.03); border-bottom: 1px solid rgba(0, 243, 255, 0.2); }
+        h1 { margin: 0; font-size: 1.3rem; letter-spacing: 4px; color: var(--blue); text-shadow: 0 0 12px var(--blue); }
+        
+        .screen { padding: 15px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .hidden { display: none !important; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { background: #161625; border: 1px solid #2d2d44; border-radius: 12px; padding: 12px 5px; text-align: center; cursor: pointer; position: relative; }
-        .card.selected { border-color: var(--pink); box-shadow: 0 0 15px var(--pink); transform: scale(0.95); }
-        .emoji { font-size: 1.8rem; display: block; margin-bottom: 5px; }
-        .label { font-size: 0.6rem; color: #888; font-weight: bold; }
-        .controls { background: #11111d; padding: 20px; border-top: 1px solid var(--purple); }
-        select, button { width: 100%; height: 48px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 10px; outline: none; }
-        select { background: #1a1a2e; color: white; border: 1px solid var(--purple); padding: 0 10px; }
-        .btn-action { background: var(--purple); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .btn-action:disabled { opacity: 0.3; }
-        .history { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; font-size: 0.75rem; max-height: 100px; overflow-y: auto; border: 1px solid #2d2d44; margin-top: 10px; }
-        .log-item { padding: 4px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+
+        /* Inventory */
+        .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .card { background: rgba(255, 255, 255, 0.03); border: 1px solid #2d2d44; border-radius: 16px; padding: 15px 5px; text-align: center; transition: 0.2s; cursor: pointer; }
+        .card.selected { border-color: var(--pink); background: rgba(255, 0, 255, 0.1); box-shadow: 0 0 15px var(--pink); transform: scale(0.96); }
+        .emoji { font-size: 2rem; display: block; margin-bottom: 8px; }
+        .label { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Controls */
+        .controls { background: #11111d; padding: 20px; border-top: 1px solid var(--purple); margin-top: auto; }
+        select, button { width: 100%; height: 50px; border-radius: 12px; font-family: 'Orbitron'; font-size: 0.85rem; margin-bottom: 12px; outline: none; }
+        select { background: #1a1a2e; color: white; border: 1px solid var(--purple); padding: 0 12px; appearance: none; }
+        
+        .btn-action { background: var(--purple); color: white; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 15px var(--purple); }
+        .btn-action:disabled { opacity: 0.2; box-shadow: none; filter: grayscale(1); }
+
+        /* History */
+        .history { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 10px; font-size: 0.7rem; max-height: 90px; overflow-y: auto; border: 1px solid #222; }
+        .log-item { padding: 6px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
         .log-item b { color: var(--blue); }
+
+        /* Pulse Animation for Loading */
+        .pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -32,32 +46,35 @@
 
 <div class="app-container">
     <header>
-        <div style="font-size: 0.6rem; color: var(--blue);">NETWORK STATUS: ACTIVE</div>
+        <div id="status" class="pulse" style="font-size: 0.55rem; color: var(--blue); margin-bottom: 5px;">SYNCING NEURAL GRID...</div>
         <h1>NEON BARTER</h1>
     </header>
 
     <div id="join-screen" class="screen">
-        <select id="pick-team">
-            <option value="1">CYBER TEAM 1</option>
-            <option value="2">CYBER TEAM 2</option>
-            <option value="3">CYBER TEAM 3</option>
-            <option value="4">CYBER TEAM 4</option>
-            <option value="5">CYBER TEAM 5</option>
-        </select>
-        <button class="btn-action" onclick="enterGame()">LINK TO FREQUENCY</button>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <p style="text-align:center; color:#555; font-size:0.7rem; margin-bottom:20px;">CHOOSE FREQUENCY</p>
+            <select id="pick-team">
+                <option value="1">CYBER TEAM 1</option>
+                <option value="2">CYBER TEAM 2</option>
+                <option value="3">CYBER TEAM 3</option>
+                <option value="4">CYBER TEAM 4</option>
+                <option value="5">CYBER TEAM 5</option>
+            </select>
+            <button class="btn-action" onclick="enterGame()">LINK FREQUENCY</button>
+        </div>
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 0.8rem;">
-            <span id="display-team" style="color: var(--pink);">--</span>
-            <span id="card-count" style="color: var(--blue);">0/10</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 0.75rem;">
+            <span id="display-team" style="color: var(--pink); border-bottom: 1px solid var(--pink);">--</span>
+            <span id="card-count" style="color: var(--blue);">--</span>
         </div>
         <div id="inventory" class="inventory-grid"></div>
         <div class="controls">
-            <select id="target-team"><option value="">Loading Targets...</option></select>
-            <button id="trade-btn" class="btn-action" onclick="sendTrade()" disabled>TRANSFER DATA</button>
+            <select id="target-team"></select>
+            <button id="trade-btn" class="btn-action" onclick="sendTrade()" disabled>EXECUTE TRANSFER</button>
             <div class="history" id="history"></div>
-            <button onclick="adminReset()" style="margin-top:15px; background:none; border:none; color:#444; font-size:0.6rem; cursor:pointer; width: 100%;">FACTORY RESET</button>
+            <p onclick="adminReset()" style="margin-top:15px; color:#333; font-size:0.6rem; text-align:center; cursor:pointer;">[ FACTORY_RESET ]</p>
         </div>
     </div>
 </div>
@@ -78,50 +95,72 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Food', e:'🍎'}, {n:'Tools', e:'🔧'}, {n:'House', e:'🏠'}];
+    const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Produce', e:'🍎'}, {n:'Tools', e:'🔧'}, {n:'Home', e:'🏠'}];
     
-    let myTeam = localStorage.getItem('bq_neon_v4');
+    let myTeam = localStorage.getItem('bq_neon_v5');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
+    // 1. Faster Listener
     onValue(ref(db, 'gameState'), (snap) => {
         gameState = snap.val();
-        if(!gameState) initGame();
-        else {
+        document.getElementById('status').innerText = "SYSTEM: READY";
+        document.getElementById('status').classList.remove('pulse');
+        
+        if(!gameState) {
+            initGame();
+        } else {
             if(myTeam) {
                 document.getElementById('join-screen').classList.add('hidden');
                 document.getElementById('game-screen').classList.remove('hidden');
-                document.getElementById('display-team').innerText = "LINK: T" + myTeam;
+                document.getElementById('display-team').innerText = "LINK: TEAM " + myTeam;
                 renderInventory();
             }
             updateDropdowns();
         }
     });
 
+    // 2. Optimized Join
     window.enterGame = async function() {
         const choice = document.getElementById('pick-team').value;
         const snap = await get(ref(db, `gameState/teams/${choice}`));
-        if (snap.val().occupied && snap.val().device !== myDevId) return alert("FREQUENCY TAKEN!");
+        const team = snap.val();
         
-        await update(ref(db), { [`gameState/teams/${choice}/occupied`]: true, [`gameState/teams/${choice}/device`]: myDevId });
+        if (team.occupied && team.device !== myDevId) return alert("FREQUENCY ENCRYPTED BY OTHER USER!");
+        
+        await update(ref(db), { 
+            [`gameState/teams/${choice}/occupied`]: true, 
+            [`gameState/teams/${choice}/device`]: myDevId 
+        });
+        
         myTeam = choice;
-        localStorage.setItem('bq_neon_v4', myTeam);
-        updateDropdowns(); // CRITICAL FIX: Update targets list immediately on login
+        localStorage.setItem('bq_neon_v5', myTeam);
+        updateDropdowns();
     };
 
+    // 3. Fast Card Initialization
     function initGame() {
         let deck = [];
-        RES.forEach(r => { for(let i=1; i<=10; i++) deck.push({ id: Math.random().toString(36).substr(2,9), type: r.n, emoji: r.e }); });
+        RES.forEach(r => { 
+            for(let i=1; i<=10; i++) deck.push({ id: Math.random().toString(36).substr(2,7), type: r.n, emoji: r.e }); 
+        });
+        
+        // Fisher-Yates Shuffle
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+
         let teams = {};
         for(let t=1; t<=5; t++) {
             teams[t] = { cards: [], logs: [], occupied: false, device: "" };
             let counts = {}; RES.forEach(r => counts[r.n] = 0);
-            while(teams[t].cards.length < 10) {
-                let idx = Math.floor(Math.random() * deck.length);
-                let card = deck[idx];
-                if(counts[card.type] < 3) {
-                    counts[card.type]++; teams[t].cards.push(card); deck.splice(idx, 1);
+            
+            for(let i = deck.length - 1; i >= 0; i--) {
+                if(teams[t].cards.length < 10 && counts[deck[i].type] < 3) {
+                    counts[deck[i].type]++;
+                    teams[t].cards.push(deck.splice(i, 1)[0]);
                 }
             }
         }
@@ -142,46 +181,53 @@
             div.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             inv.appendChild(div);
         });
-        document.getElementById('card-count').innerText = (team.cards || []).length + "/10";
+        document.getElementById('card-count').innerText = (team.cards || []).length + " UNITS";
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
-        document.getElementById('history').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "NO LOGS";
+        document.getElementById('history').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "LOGS EMPTY";
     }
 
     window.sendTrade = function() {
         const target = document.getElementById('target-team').value;
-        if(!target) return alert("SELECT TARGET!");
-        const items = gameState.teams[myTeam].cards.filter(c => selectedCards.has(c.id));
-        const rem = gameState.teams[myTeam].cards.filter(c => !selectedCards.has(c.id));
+        if(!target) return alert("TARGET NOT SELECTED!");
+        const team = gameState.teams[myTeam];
+        const items = team.cards.filter(c => selectedCards.has(c.id));
+        const rem = team.cards.filter(c => !selectedCards.has(c.id));
         const log = items.map(i => i.emoji).join('');
+        
         const up = {};
         up[`gameState/teams/${myTeam}/cards`] = rem;
-        up[`gameState/teams/${myTeam}/logs`] = [{m:`TO T${target}`, t:log}, ...(gameState.teams[myTeam].logs || [])].slice(0,8);
+        up[`gameState/teams/${myTeam}/logs`] = [{m:`TO T${target}`, t:log}, ...(team.logs || [])].slice(0,8);
         up[`gameState/teams/${target}/cards`] = [...(gameState.teams[target].cards || []), ...items];
         up[`gameState/teams/${target}/logs`] = [{m:`FROM T${myTeam}`, t:log}, ...(gameState.teams[target].logs || [])].slice(0,8);
-        update(ref(db), up).then(() => { selectedCards.clear(); alert("TRANSFER COMPLETE"); });
+        
+        update(ref(db), up).then(() => { selectedCards.clear(); alert("DATA TRANSFER SUCCESSFUL"); });
     }
 
     function updateDropdowns() {
-        const pick = document.getElementById('pick-team');
-        const target = document.getElementById('target-team');
-        let tHtml = '<option value="">TRANSFER TO...</option>';
+        const targetSelect = document.getElementById('target-team');
+        const joinSelect = document.getElementById('pick-team');
+        let tHtml = '<option value="">SELECT RECIPIENT...</option>';
+        
         for(let i=1; i<=5; i++){
             if(gameState.teams[i]) {
                 const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
-                const opt = pick.querySelector(`option[value="${i}"]`);
-                if(opt) opt.disabled = isTaken;
-                if(myTeam && i != myTeam) tHtml += `<option value="${i}">TARGET: TEAM ${i}</option>`;
+                const joinOpt = joinSelect.querySelector(`option[value="${i}"]`);
+                if(joinOpt) joinOpt.disabled = isTaken;
+                
+                if(myTeam && i != myTeam) {
+                    tHtml += `<option value="${i}">TARGET: TEAM ${i}</option>`;
+                }
             }
         }
-        target.innerHTML = tHtml;
+        targetSelect.innerHTML = tHtml;
     }
 
     window.adminReset = function() {
-        if(confirm("WIPE DATA?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload()); }
+        if(confirm("TERMINATE GRID?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload()); }
     }
     function getDeviceId() {
-        let id = localStorage.getItem('bq_dev_v4');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_v4', id); }
+        let id = localStorage.getItem('bq_dev_v5');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_v5', id); }
         return id;
     }
 </script>
