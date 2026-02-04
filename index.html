@@ -12,11 +12,17 @@
         .screen { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
 
-        .crisis-box { background: #fff; color: #000; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 10px solid var(--red); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .demand-tag { font-size: 0.7rem; background: #eee; padding: 3px 8px; border-radius: 4px; color: #444; font-weight: bold; margin-right: 5px; border: 1px solid #ccc; }
+        /* Win Overlay */
+        #win-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 
+        /* Crisis Box */
+        .crisis-box { background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 10px solid var(--red); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .progress-bar { height: 8px; background: #ddd; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--green); transition: 0.5s; }
+
+        /* Inventory */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
-        .card { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .card { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; position: relative;}
         .card.selected { border-color: var(--gold); background: #3d3d29; transform: scale(0.95); box-shadow: 0 0 10px var(--gold); }
         .emoji { font-size: 1.8rem; display: block; }
         .label { font-size: 0.55rem; color: #aaa; text-transform: uppercase; margin-top: 4px; display: block; }
@@ -29,7 +35,6 @@
         
         input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; font-size: 1rem;}
         .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
-        .log-entry { border-bottom: 1px solid #222; padding: 4px 0; color: #888; }
         
         #status-dot { height: 8px; width: 8px; background: var(--red); border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online #status-dot { background: var(--green); }
@@ -37,43 +42,48 @@
 </head>
 <body>
 
+<div id="win-screen" class="hidden">
+    <h1 style="font-size: 5rem; margin: 0;">🏆</h1>
+    <h2 id="win-msg" style="color: var(--gold);">VILLAGE SAVED!</h2>
+    <p id="win-desc">You collected the needed resources.</p>
+    <button class="btn-main" onclick="location.reload()">Back to Market</button>
+</div>
+
 <div class="app-container">
     <header>
         <h2 id="v-header" style="margin:0; color:var(--gold); font-size: 1.1rem;">VILLAGE BAZAAR</h2>
-        <div style="font-size: 0.6rem; color: #888;"><span id="status-dot"></span> <span id="status-text">Connecting...</span></div>
+        <div style="font-size: 0.6rem; color: #888;"><span id="status-dot"></span> <span id="status-text">Syncing...</span></div>
     </header>
 
     <div id="join-screen" class="screen">
-        <label style="font-size: 0.8rem; color: #888;">Your Tribe Name:</label>
-        <input type="text" id="v-name-input" placeholder="e.g. Mountain Clan">
-        <label style="font-size: 0.8rem; color: #888;">Village Slot:</label>
+        <input type="text" id="v-name-input" placeholder="Tribe Name (e.g. Phoenix)">
         <select id="v-select">
             <option value="1">Village 1</option><option value="2">Village 2</option>
             <option value="3">Village 3</option><option value="4">Village 4</option>
             <option value="5">Village 5</option>
         </select>
-        <button class="btn-main" onclick="joinVillage()">Enter Market</button>
-        <button class="btn-nav" onclick="tryDashboard()">Open Dashboard (Locked)</button>
+        <button class="btn-main" onclick="joinVillage()">Join Market</button>
+        <button class="btn-nav" onclick="tryDashboard()">Admin Dashboard</button>
         
-        <button class="btn-danger" onclick="factoryReset()">⚠️ GLOBAL FACTORY RESET</button>
-        <p style="font-size: 0.6rem; color: #666; text-align: center; margin-top: 5px;">Required: One reset per session.</p>
+        <button class="btn-danger" onclick="factoryReset()">⚠️ MASTER FACTORY RESET</button>
+        <p style="font-size: 0.6rem; color: #666; text-align: center;">Wipes all data and restarts the 50-card economy.</p>
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div id="crisis-ui" class="crisis-box">Readying Village...</div>
+        <div id="crisis-ui" class="crisis-box"></div>
         <div id="inventory-grid" class="grid"></div>
         <div style="margin-top:auto;">
             <select id="trade-target" style="width:100%;"></select>
-            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Propose Barter</button>
+            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Barter Selected Items</button>
             <div id="history-box" class="history-list"></div>
-            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Return to Menu</button>
+            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Exit to Menu</button>
         </div>
     </div>
 
     <div id="dash-screen" class="screen hidden">
-        <h3 style="margin:0 0 10px 0; color: var(--gold);">Global Resource Monitor</h3>
+        <h3 style="margin:0 0 10px 0;">Market Census</h3>
         <div id="dash-data"></div>
-        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close Monitor</button>
+        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close Census</button>
     </div>
 </div>
 
@@ -94,25 +104,22 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // RESOURCE CONFIG: exactly 10 of each
-    const RESOURCE_TYPES = [
+    const RES = [
         { type: 'Rice', emoji: '🍚' }, { type: 'Cattle', emoji: '🐄' },
         { type: 'Wood', emoji: '🪵' }, { type: 'Tools', emoji: '🔧' },
         { type: 'Shelter', emoji: '🏠' }
     ];
 
-    const CRISES_CONFIG = [
-        { name: "Flood", goal: "Cattle", icon: "🌊" },
-        { name: "Plague", goal: "Shelter", icon: "🦠" },
-        { name: "Drought", goal: "Rice", icon: "☀️" },
-        { name: "War", goal: "Tools", icon: "⚔️" },
-        { name: "Heavy Snow", goal: "Wood", icon: "❄️" }
+    const CRISES = [
+        { name: "Drought", goal: "Rice", icon: "☀️" }, { name: "Flood", goal: "Cattle", icon: "🌊" },
+        { name: "Heavy Snow", goal: "Wood", icon: "❄️" }, { name: "War", goal: "Tools", icon: "⚔️" },
+        { name: "Plague", goal: "Shelter", icon: "🦠" }
     ];
 
     let myId = localStorage.getItem('v_id');
     let mode = localStorage.getItem('v_mode');
     let devId = localStorage.getItem('v_dev') || Math.random().toString(36).substr(2,9);
-    let currentSession = "";
+    let session = "";
     localStorage.setItem('v_dev', devId);
     window.selected = new Set();
 
@@ -123,8 +130,8 @@
 
     onValue(ref(db, 'session'), (s) => {
         if(!s.val()) return;
-        if(!currentSession) currentSession = s.val();
-        else if(currentSession !== s.val()) { localStorage.clear(); location.reload(); }
+        if(!session) session = s.val();
+        else if(session !== s.val()) { localStorage.clear(); location.reload(); }
     });
 
     onValue(ref(db, 'bazaar'), (s) => {
@@ -135,12 +142,12 @@
 
     window.joinVillage = async () => {
         const id = document.getElementById('v-select').value;
-        const name = document.getElementById('v-name-input').value || "Unnamed Tribe";
-        const snap = await get(ref(db, 'bazaar/teams/' + id));
-        if(!snap.exists()) return alert("Market is empty. Please run Factory Reset first.");
+        const name = document.getElementById('v-name-input').value || "Village " + id;
+        const s = await get(ref(db, `bazaar/teams/${id}`));
+        if(!s.exists()) return alert("Market is empty. Click Factory Reset first.");
         
-        const vData = snap.val();
-        if(vData.owner && vData.owner !== devId) return alert("This village is already led by another Elder!");
+        const v = s.val();
+        if(v.owner && v.owner !== devId) return alert("Village Occupied!");
 
         await update(ref(db, `bazaar/teams/${id}`), { owner: devId, name: name });
         myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); location.reload();
@@ -148,7 +155,7 @@
 
     window.tryDashboard = async () => {
         const snap = await get(ref(db, 'dash_lock'));
-        if(snap.exists() && snap.val() !== devId) return alert("The Dashboard is already open on another device.");
+        if(snap.exists() && snap.val() !== devId) return alert("Dashboard locked by another admin.");
         await set(ref(db, 'dash_lock'), devId);
         localStorage.setItem('v_mode', 'dash'); location.reload();
     };
@@ -157,18 +164,20 @@
 
     function renderGame(data) {
         const v = data.teams[myId];
-        if(!v || !v.crisis) return; 
+        if(!v || !v.crisis) return;
 
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
-        document.getElementById('v-header').innerText = v.name || "Village " + myId;
+        document.getElementById('v-header').innerText = v.name;
         
+        const score = (v.cards || []).filter(c => c.type === v.crisis.goal).length;
+        const pct = Math.min((score / 4) * 100, 100);
+
         document.getElementById('crisis-ui').innerHTML = `
-            <div style="font-weight:bold; font-size:1.15rem;">${v.crisis.icon} Crisis: ${v.crisis.name}</div>
-            <div style="margin-top:8px;">
-                <span class="demand-tag">Goal: 4 ${v.crisis.goal}</span>
-                <span class="demand-tag">Scarcity: ${v.secDemand}</span>
-            </div>
+            <div style="font-weight:bold; font-size:1.1rem;">${v.crisis.icon} ${v.crisis.name}</div>
+            <div style="font-size:0.8rem; margin:5px 0;">Goal: 4 ${v.crisis.goal} | <span style="color:red">Need: ${v.scarcity}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:0.6rem; text-align:right; margin-top:2px;">${score}/4 Collected</div>
         `;
         
         const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
@@ -183,105 +192,83 @@
             grid.appendChild(d);
         });
 
-        document.getElementById('history-box').innerHTML = (v.history || []).map(h => `<div class="log-entry">${h}</div>`).join('');
+        document.getElementById('history-box').innerHTML = (v.history || []).map(h => `<div style="padding:2px 0; border-bottom:1px solid #111;">${h}</div>`).join('');
         document.getElementById('trade-btn').disabled = !window.selected.size;
         
-        let opt = '<option value="">Select Village to Barter...</option>';
-        for(let i=1; i<=5; i++) if(i!=myId) opt += `<option value="${i}">${data.teams[i].name || "Village "+i}</option>`;
+        let opt = '<option value="">Barter with...</option>';
+        for(let i=1; i<=5; i++) if(i!=myId) opt += `<option value="${i}">${data.teams[i].name}</option>`;
         document.getElementById('trade-target').innerHTML = opt;
+
+        if(score >= 4) {
+            document.getElementById('win-msg').innerText = `${v.name} SAVED!`;
+            document.getElementById('win-desc').innerText = `You collected 4 ${v.crisis.goal} cards.`;
+            document.getElementById('win-screen').classList.remove('hidden');
+        }
     }
 
     window.handleTrade = async () => {
         const target = document.getElementById('trade-target').value;
-        if(!target) return alert("Select a recipient village.");
+        if(!target) return alert("Select a village!");
+        const btn = document.getElementById('trade-btn');
+        btn.disabled = true; btn.innerText = "Processing...";
+
         const s = await get(ref(db, 'bazaar')); const data = s.val();
+        const items = data.teams[myId].cards.filter(c => window.selected.has(c.id));
+        const kept = data.teams[myId].cards.filter(c => !window.selected.has(c.id));
         
-        const itemsToMove = data.teams[myId].cards.filter(c => window.selected.has(c.id));
-        const keptItems = data.teams[myId].cards.filter(c => !window.selected.has(c.id));
+        const up = {};
+        up[`bazaar/teams/${myId}/cards`] = kept;
+        up[`bazaar/teams/${myId}/history`] = [`Sent ${items.length} to ${data.teams[target].name}`, ...(data.teams[myId].history || [])].slice(0,5);
+        up[`bazaar/teams/${target}/cards`] = [...(data.teams[target].cards || []), ...items];
+        up[`bazaar/teams/${target}/history`] = [`Got ${items.length} from ${data.teams[myId].name}`, ...(data.teams[target].history || [])].slice(0,5);
         
-        const updates = {};
-        updates[`bazaar/teams/${myId}/cards`] = keptItems;
-        updates[`bazaar/teams/${myId}/history`] = [`Sent ${itemsToMove.length} items to ${data.teams[target].name}`, ...(data.teams[myId].history || [])].slice(0,5);
-        updates[`bazaar/teams/${target}/cards`] = [...(data.teams[target].cards || []), ...itemsToMove];
-        updates[`bazaar/teams/${target}/history`] = [`Got ${itemsToMove.length} items from ${data.teams[myId].name}`, ...(data.teams[target].history || [])].slice(0,5);
-        
-        await update(ref(db), updates); window.selected.clear();
+        await update(ref(db), up); window.selected.clear();
     };
 
     function renderDash(data) {
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-data').innerHTML = Object.entries(data.teams).map(([id, v]) => `
-            <div style="background:#222; margin-bottom:10px; padding:12px; border-radius:8px; border-left: 5px solid var(--gold);">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <b>${v.name || 'Village '+id}</b>
-                    <span style="font-size:0.7rem; color:#888;">${v.crisis.icon} ${v.crisis.name}</span>
-                </div>
-                <div style="font-size:1.2rem; margin: 8px 0; letter-spacing: 2px;">
-                    ${(v.cards || []).map(c=>c.emoji).join('')}
-                </div>
-                <div style="font-size:0.6rem; color:#666;">Goal: ${v.crisis.goal} | Scarcity: ${v.secDemand}</div>
+            <div style="background:#222; margin-bottom:8px; padding:10px; border-radius:8px; border-left:4px solid var(--gold);">
+                <b>${v.name}</b> (${v.crisis.name})<br>
+                <div style="font-size:1.1rem; margin:5px 0;">${(v.cards || []).map(c=>c.emoji).join(' ')}</div>
+                <small style="color:#888;">Goal: ${v.crisis.goal} | Scare: ${v.scarcity}</small>
             </div>
         `).join('');
     }
 
     window.factoryReset = async () => {
-        if(!confirm("⚠️ START NEW GAME?\nThis will clear all devices and shuffle all 50 resource cards.")) return;
+        if(!confirm("⚠️ RESET ECONOMY?\nThis will clear all teams and reshuffle the 50 cards.")) return;
         
-        // 1. Generate perfect 50-card pool (10 of each type)
         let pool = [];
-        RESOURCE_TYPES.forEach(res => {
-            for(let i=0; i<10; i++) {
-                pool.push({ type: res.type, emoji: res.emoji, id: Math.random().toString(36).substr(2,9) });
-            }
-        });
-        
-        // Shuffle the pool
+        RES.forEach(r => { for(let i=0; i<10; i++) pool.push({...r, id: Math.random().toString(36).substr(2,9)}); });
         pool.sort(() => Math.random() - 0.5);
 
-        const shuffledCrises = [...CRISES_CONFIG].sort(() => Math.random() - 0.5);
+        const shufCrises = [...CRISES].sort(() => Math.random() - 0.5);
         let teams = {};
 
         for(let t=1; t<=5; t++) {
-            const primaryGoal = shuffledCrises[t-1].goal;
-            const otherRes = RESOURCE_TYPES.filter(r => r.type !== primaryGoal);
-            const secondaryDemand = otherRes[Math.floor(Math.random() * otherRes.length)].type;
+            const goal = shufCrises[t-1].goal;
+            const others = RES.filter(r => r.type !== goal);
+            const scarcity = others[Math.floor(Math.random() * others.length)].type;
             
-            let villageHand = [];
-            // Strategy: Enforce double demand by limiting initial supply
+            let hand = [];
+            // Strategy: Ensure village starts with 0 Goal and 0 Scarcity items
             for (let i = pool.length - 1; i >= 0; i--) {
                 const card = pool[i];
-                const gCount = villageHand.filter(c => c.type === primaryGoal).length;
-                const sCount = villageHand.filter(c => c.type === secondaryDemand).length;
-
-                // Restrict cards to 0 or 1 for demand resources
-                if (card.type === primaryGoal && gCount >= 1) continue;
-                if (card.type === secondaryDemand && sCount >= 1) continue;
-
-                if (villageHand.length < 10) { 
-                    villageHand.push(pool.splice(i, 1)[0]); 
+                if (card.type !== goal && card.type !== scarcity && hand.length < 10) {
+                    hand.push(pool.splice(i, 1)[0]);
                 }
             }
-            
-            // Fill remaining slots to reach exactly 10 cards
-            while(villageHand.length < 10) { 
-                villageHand.push(pool.pop()); 
-            }
+            // If hand isn't 10 (rare logic edge), fill from pool
+            while(hand.length < 10) hand.push(pool.pop());
 
-            teams[t] = { 
-                cards: villageHand, 
-                crisis: shuffledCrises[t-1], 
-                secDemand: secondaryDemand,
-                history: [], 
-                owner: "", 
-                name: "Village " + t 
-            };
+            teams[t] = { cards: hand, crisis: shufCrises[t-1], scarcity: scarcity, history: [], owner: "", name: "Village "+t };
         }
-        
         await set(ref(db, 'bazaar'), { teams });
-        await set(ref(db, 'dash_lock'), null); // Unlock dashboard for new admin
+        await set(ref(db, 'dash_lock'), null);
         await set(ref(db, 'session'), Math.random().toString(36).substr(2,9));
-        alert("Success! All devices will now refresh.");
+        alert("System Reset!");
     };
 </script>
 </body>
