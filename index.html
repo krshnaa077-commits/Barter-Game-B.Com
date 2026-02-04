@@ -5,76 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🏺 Crisis Bazaar</title>
     <style>
-        :root { --gold: #d4af37; --bg: #0d0d0d; --card: #1a1a1a; --red: #ff5252; --blue: #448aff; --green: #4caf50; }
+        :root { --gold: #d4af37; --bg: #050505; --card: #141414; --red: #e53935; --blue: #2979ff; --green: #43a047; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 10px; }
-        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 15px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; }
-        header { padding: 10px; text-align: center; border-bottom: 2px solid var(--gold); background: #111; }
+        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 12px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; }
+        header { padding: 12px; text-align: center; border-bottom: 2px solid var(--gold); background: #000; }
         .screen { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
 
-        /* Crisis Box & Labels */
-        .crisis-box { background: #fff; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 10px solid var(--red); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .goal-tag { font-size: 0.75rem; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; color: #2e7d32; font-weight: bold; border: 1px solid #81c784; margin-right: 5px; }
-        .scare-tag { font-size: 0.75rem; background: #ffebee; padding: 4px 8px; border-radius: 4px; color: #c62828; font-weight: bold; border: 1px solid #ef9a9a; }
+        .crisis-box { background: #fff; color: #000; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 8px solid var(--red); }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+        .card { background: #222; border: 1px solid #444; border-radius: 6px; padding: 8px 2px; text-align: center; cursor: pointer; position: relative; }
+        .card.selected { border-color: var(--gold); background: #333; transform: scale(0.95); box-shadow: 0 0 8px var(--gold); }
+        .emoji { font-size: 1.6rem; display: block; }
+        .label { font-size: 0.5rem; color: #888; text-transform: uppercase; margin-top: 2px; display: block; }
 
-        /* Cards */
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
-        .card { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .card.selected { border-color: var(--gold); background: #3d3d29; transform: scale(0.95); box-shadow: 0 0 10px var(--gold); }
-        .emoji { font-size: 1.8rem; display: block; }
-        .label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; margin-top: 4px; display: block; }
-
-        button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        button { padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; font-size: 0.9rem; }
         .btn-main { background: var(--gold); color: #000; }
         .btn-trade { background: var(--blue); color: white; width: 100%; }
         .btn-nav { background: #333; color: white; font-size: 0.8rem; }
-        .btn-danger { background: #b71c1c; color: white; margin-top: 30px; }
+        .btn-danger { background: #b71c1c; color: white; margin-top: 20px; width: 100%; padding: 15px; border: 1px solid #ff5252; }
         
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; font-size: 1rem;}
+        input, select { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: white; margin-bottom: 8px; font-size: 1rem; width: 94%; }
         
-        #win-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #win-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #loading { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; align-items: center; justify-content: center; color: var(--gold); }
     </style>
 </head>
 <body>
 
+<div id="loading">Connecting to Satellite...</div>
+
 <div id="win-screen" class="hidden">
     <h1 style="font-size: 5rem; margin: 0;">🏆</h1>
-    <h2 id="win-msg" style="color: var(--gold);">CRISIS RESOLVED!</h2>
-    <p>Your village collected 3 goal resources.</p>
-    <button class="btn-main" onclick="location.reload()">Return to Game</button>
+    <h2 style="color: var(--gold); margin: 10px 0;">MISSION ACCOMPLISHED</h2>
+    <p>You secured 3 units of the required resource.</p>
+    <button class="btn-main" onclick="location.reload()">Refresh Signal</button>
 </div>
 
 <div class="app-container">
     <header>
-        <h2 id="v-header" style="margin:0; color:var(--gold); font-size: 1.1rem;">VILLAGE BAZAAR</h2>
+        <h2 style="margin:0; color:var(--gold); letter-spacing: 1px; font-size: 1rem;">CRISIS BAZAAR</h2>
     </header>
 
     <div id="join-screen" class="screen">
-        <input type="text" id="v-name-input" placeholder="Enter Tribe Name">
+        <h3 style="color:#888; text-align:center; margin-top:0;">Establish Uplink</h3>
+        <input type="text" id="v-name-input" placeholder="Enter Team Name">
         <select id="v-select">
             <option value="1">Village 1</option><option value="2">Village 2</option>
             <option value="3">Village 3</option><option value="4">Village 4</option>
             <option value="5">Village 5</option>
         </select>
-        <button class="btn-main" onclick="joinVillage()">Enter Market</button>
-        <button class="btn-nav" onclick="tryDashboard()">Admin Dashboard</button>
-        <button class="btn-danger" onclick="factoryReset()">⚠️ RESET: 40 CARDS / 3 GOAL</button>
+        <button class="btn-main" style="width:100%" onclick="joinVillage()">Initialize Terminal</button>
+        <button class="btn-nav" style="width:100%" onclick="tryDashboard()">Access Admin Dashboard</button>
+        
+        <div style="margin-top: auto;">
+            <p style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:5px;">Instructor Control</p>
+            <button class="btn-danger" onclick="hardReset()">⚠️ HARD RESET (FORCE REFRESH)</button>
+        </div>
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div id="crisis-ui" class="crisis-box">Initializing Data...</div>
+        <div id="crisis-ui" class="crisis-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="c-icon" style="font-size:1.5rem;"></span>
+                <div style="text-align:right;">
+                    <div id="c-name" style="font-weight:bold;"></div>
+                    <div style="font-size:0.75rem; color:#444;">Status: Critical</div>
+                </div>
+            </div>
+            <hr style="border:0; border-top:1px solid #ddd; margin:8px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                <span>🎯 Goal: <b>3</b> <span id="c-goal"></span></span>
+                <span id="c-progress" style="background:#222; color:#fff; padding:2px 6px; border-radius:4px;">0/3</span>
+            </div>
+        </div>
+
         <div id="inventory-grid" class="grid"></div>
-        <div style="margin-top:auto;">
-            <select id="trade-target" style="width:100%;"></select>
-            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Barter Selected</button>
-            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Main Menu</button>
+
+        <div style="margin-top:auto; background:#111; padding:10px; border-radius:8px; border:1px solid #333;">
+            <select id="trade-target" style="width:100%; margin-bottom:5px;"></select>
+            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Barter Selected Items</button>
+            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Return to Menu</button>
         </div>
     </div>
 
     <div id="dash-screen" class="screen hidden">
-        <h3 style="margin:0 0 10px 0;">Market Census</h3>
+        <h3 style="margin:0 0 10px 0; color:var(--gold);">Global Supply Monitor</h3>
         <div id="dash-data"></div>
-        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close</button>
+        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close Monitor</button>
     </div>
 </div>
 
@@ -112,6 +131,19 @@
     let devId = localStorage.getItem('v_dev') || Math.random().toString(36).substr(2,9);
     localStorage.setItem('v_dev', devId);
     window.selected = new Set();
+    
+    // --- GLOBAL RESET LISTENER ---
+    // This watches for the server timestamp to change. If it does, RELOAD EVERYONE.
+    let lastResetTime = 0;
+    onValue(ref(db, 'sys_reset_time'), (snap) => {
+        const val = snap.val();
+        document.getElementById('loading').classList.add('hidden'); // Hide loading on connect
+        if (val && lastResetTime !== 0 && val !== lastResetTime) {
+            localStorage.removeItem('v_mode'); // Clear mode so they go back to login
+            location.reload(); // Force refresh
+        }
+        if(val) lastResetTime = val;
+    });
 
     onValue(ref(db, 'bazaar'), (s) => {
         const data = s.val(); if(!data) return;
@@ -122,8 +154,11 @@
     window.joinVillage = async () => {
         const id = document.getElementById('v-select').value;
         const name = document.getElementById('v-name-input').value || "Village " + id;
-        await update(ref(db, `bazaar/teams/${id}`), { owner: devId, name: name });
-        myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); location.reload();
+        await update(ref(db, `bazaar/teams/${id}`), { name: name });
+        myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); 
+        // We do NOT reload here, we just render.
+        const snap = await get(ref(db, 'bazaar'));
+        if(snap.exists()) renderGame(snap.val());
     };
 
     window.tryDashboard = () => { localStorage.setItem('v_mode', 'dash'); location.reload(); };
@@ -131,23 +166,24 @@
 
     function renderGame(data) {
         const v = data.teams[myId];
-        if(!v || !v.crisis) return; // FIX: Prevents "undefined" screen
+        if(!v || !v.crisis) return; // Prevent undefined errors
 
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
-        document.getElementById('v-header').innerText = v.name;
         
-        const goalCount = (v.cards || []).filter(c => c.type === v.crisis.goal).length;
+        // Count owned goals
+        const goalCount = (v.cards || []).filter(c => c && c.type === v.crisis.goal).length;
         
-        document.getElementById('crisis-ui').innerHTML = `
-            <div style="font-weight:bold; font-size:1.1rem; margin-bottom:8px;">${v.crisis.icon} ${v.crisis.name}</div>
-            <span class="goal-tag">Goal: 3 ${v.crisis.goal}</span> 
-            <span class="scare-tag">Scarcity: ${v.scarcity}</span>
-            <div style="margin-top:10px; font-size:0.85rem; color:#666;">Progress: ${goalCount}/3 Collected</div>
-        `;
+        // Update UI Text safely
+        document.getElementById('c-icon').innerText = v.crisis.icon || "⚠️";
+        document.getElementById('c-name').innerText = v.crisis.name + " Crisis";
+        document.getElementById('c-goal').innerText = v.crisis.goal;
+        document.getElementById('c-progress').innerText = `${goalCount}/3`;
+        document.getElementById('c-progress').style.background = goalCount >= 3 ? 'var(--green)' : '#222';
 
         const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
         (v.cards || []).forEach(c => {
+            if(!c) return;
             const d = document.createElement('div');
             d.className = `card ${window.selected.has(c.id) ? 'selected' : ''}`;
             d.onclick = () => { 
@@ -158,8 +194,11 @@
             grid.appendChild(d);
         });
 
-        document.getElementById('trade-btn').disabled = !window.selected.size;
-        let opt = '<option value="">Select Village...</option>';
+        const btn = document.getElementById('trade-btn');
+        btn.disabled = !window.selected.size;
+        btn.innerText = window.selected.size ? `Trade ${window.selected.size} Items` : "Select Items to Trade";
+
+        let opt = '<option value="">Select Recipient...</option>';
         for(let i=1; i<=5; i++) if(i!=myId) opt += `<option value="${i}">${data.teams[i].name}</option>`;
         document.getElementById('trade-target').innerHTML = opt;
 
@@ -168,7 +207,8 @@
 
     window.handleTrade = async () => {
         const target = document.getElementById('trade-target').value;
-        if(!target) return alert("Pick a target village!");
+        if(!target) return alert("You must choose a village to trade with!");
+        
         const s = await get(ref(db, 'bazaar')); const data = s.val();
         
         const moving = data.teams[myId].cards.filter(c => window.selected.has(c.id));
@@ -177,6 +217,7 @@
         const up = {};
         up[`bazaar/teams/${myId}/cards`] = kept;
         up[`bazaar/teams/${target}/cards`] = [...(data.teams[target].cards || []), ...moving];
+        
         await update(ref(db), up); window.selected.clear();
     };
 
@@ -184,57 +225,88 @@
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-data').innerHTML = Object.entries(data.teams).map(([id, v]) => `
-            <div style="background:#222; margin-bottom:8px; padding:12px; border-radius:8px; border-left: 4px solid var(--gold);">
-                <div style="display:flex; justify-content:space-between;">
-                    <b>${v.name}</b> <span>${v.crisis.icon} ${v.crisis.goal}</span>
+            <div style="background:#1a1a1a; margin-bottom:8px; padding:10px; border-radius:6px; border-left:4px solid var(--gold);">
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                    <b>${v.name}</b> <span style="color:#888;">Needs: ${v.crisis.goal}</span>
                 </div>
-                <div style="font-size:1.2rem; margin:8px 0;">${(v.cards || []).map(c=>c.emoji).join('')}</div>
-                <small style="color:#888;">Scarcity: ${v.scarcity}</small>
+                <div style="font-size:1.1rem; margin-top:4px;">${(v.cards || []).map(c=> c ? c.emoji : '').join('')}</div>
             </div>
         `).join('');
     }
 
-    window.factoryReset = async () => {
-        if(!confirm("Resetting to 40 Cards / 3 Goal Logic. Proceed?")) return;
+    // --- HARD MODE DISTRIBUTION ALGORITHM ---
+    window.hardReset = async () => {
+        if(!confirm("⚠️ ACTIVATE HARD MODE?\n\n• Resets all 5 devices\n• Prevents hoarding (Max 2 of any type)\n• Ensures 0 starting goal cards")) return;
         
-        // Build pool: 5 types * 8 cards = 40 cards total
+        document.getElementById('loading').classList.remove('hidden');
+
+        // 1. Create Pool (5 types * 8 cards = 40 cards)
         let pool = [];
         RES.forEach(r => { 
             for(let i=0; i<8; i++) {
                 pool.push({type: r.type, emoji: r.emoji, id: Math.random().toString(36).substr(2,9)});
             }
         });
+        // Shuffle vigorously
         pool.sort(() => Math.random() - 0.5);
 
         const shufCrises = [...CRISES].sort(() => Math.random() - 0.5);
         let teams = {};
 
+        // 2. Initialize Empty Teams
         for(let t=1; t<=5; t++) {
-            const goal = shufCrises[t-1].goal;
-            // Scarcity is one resource they will start with 0 of.
-            const scarcity = RES.find(r => r.type !== goal).type;
-            
-            let hand = [];
-            // Strategy: Pull 8 cards that are NOT the goal or scarcity
-            for (let i = pool.length - 1; i >= 0; i--) {
-                if (pool[i].type !== goal && pool[i].type !== scarcity && hand.length < 8) {
-                    hand.push(pool.splice(i, 1)[0]);
-                }
-            }
-            // Fail-safe: if hand still small, pull any remaining pool cards
-            while(hand.length < 8) hand.push(pool.pop());
-
             teams[t] = { 
-                cards: hand, 
+                cards: [], 
                 crisis: shufCrises[t-1], 
-                scarcity: scarcity, 
-                owner: "", 
                 name: "Village " + t 
             };
         }
+
+        // 3. SMART DISTRIBUTION (The "Anti-Clump" Logic)
+        // We deal cards one by one, checking constraints every time.
+        
+        let attempts = 0;
+        while(pool.length > 0 && attempts < 1000) {
+            let card = pool.pop();
+            let assigned = false;
+            
+            // Try to find a valid home for this card
+            // Start at a random village to avoid bias, then cycle through
+            let startV = Math.floor(Math.random() * 5) + 1;
+            
+            for(let offset=0; offset<5; offset++) {
+                let vId = ((startV + offset - 1) % 5) + 1; // Cycle 1-5
+                let t = teams[vId];
+
+                // CONSTRAINT A: Hand size limit (8 cards max)
+                if(t.cards.length >= 8) continue;
+
+                // CONSTRAINT B: NO GOAL CARDS allowed in start hand
+                if(card.type === t.crisis.goal) continue;
+
+                // CONSTRAINT C: ANTI-CLUMPING (Max 2 of same type)
+                // If they already have 2 of this type, they can't have another.
+                let typeCount = t.cards.filter(c => c.type === card.type).length;
+                if(typeCount >= 2) continue;
+
+                // If passed all checks, give card
+                t.cards.push(card);
+                assigned = true;
+                break;
+            }
+
+            // If card couldn't be placed (very rare with these math constraints), put back at bottom
+            if(!assigned) {
+                pool.unshift(card);
+                attempts++;
+            }
+        }
+
+        // 4. Send to Database & TRIGGER GLOBAL RELOAD
         await set(ref(db, 'bazaar'), { teams });
-        await set(ref(db, 'session'), Math.random().toString(36).substr(2,9));
-        alert("40-Card Market Initialized!");
+        
+        // This timestamp update triggers the 'onValue' listener on ALL devices
+        await set(ref(db, 'sys_reset_time'), Date.now()); 
     };
 </script>
 </body>
