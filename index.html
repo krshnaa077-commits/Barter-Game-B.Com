@@ -23,8 +23,9 @@
         .btn-main { background: var(--gold); color: #000; }
         .btn-trade { background: var(--blue); color: white; width: 100%; }
         .btn-nav { background: #333; color: white; font-size: 0.8rem; }
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; }
+        .btn-danger { background: #b71c1c; color: white; font-size: 0.75rem; margin-top: 25px; border: 1px solid #ff5252; }
         
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; }
         .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
         #status-dot { height: 8px; width: 8px; background: var(--red); border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online #status-dot { background: var(--green); }
@@ -47,6 +48,10 @@
         </select>
         <button class="btn-main" onclick="joinVillage()">Enter Village</button>
         <button class="btn-nav" onclick="tryDashboard()">Global Dashboard</button>
+        
+        <hr style="width:100%; border: 0; border-top: 1px solid #333; margin: 20px 0;">
+        <button class="btn-danger" onclick="globalReset()">FACTORY RESET (Admin Only)</button>
+        <p style="font-size: 0.6rem; color: #666; text-align: center;">Resets cards and kicks everyone to menu.</p>
     </div>
 
     <div id="game-screen" class="screen hidden">
@@ -61,9 +66,8 @@
     </div>
 
     <div id="dash-screen" class="screen hidden">
-        <h3>Live Market (Locked)</h3>
+        <h3 style="margin:0 0 10px 0;">Market Dashboard (Locked)</h3>
         <div id="dash-data"></div>
-        <button class="btn-main" style="background:var(--red); color:white; width:100%;" onclick="globalReset()">FULL RESET & RESHUFFLE</button>
         <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Exit Dashboard</button>
     </div>
 </div>
@@ -84,10 +88,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const RES = [
-        {n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, 
-        {n:'Wood', e:'🪵'}, {n:'Tools', e:'🔧'}, {n:'Shelter', e:'🏠'}
-    ];
+    const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Wood', e:'🪵'}, {n:'Tools', e:'🔧'}, {n:'Shelter', e:'🏠'}];
     const CRISES = [
         { n: "Flood", g: "Cattle", i: "🌊" }, { n: "Plague", g: "Shelter", i: "🦠" },
         { n: "Drought", g: "Rice", i: "☀️" }, { n: "War", g: "Tools", i: "⚔️" },
@@ -121,15 +122,19 @@
     window.joinVillage = async () => {
         const id = document.getElementById('v-select').value;
         const name = document.getElementById('v-name-input').value || "Village " + id;
-        const s = await get(ref(db, `bazaar/teams/${id}/owner`));
-        if(s.exists() && s.val() && s.val() !== devId) return alert("Village Led by Another Elder!");
+        const snap = await get(ref(db, 'bazaar'));
+        if(!snap.exists()) return alert("Market is empty. Click Factory Reset first.");
+        
+        const ownerSnap = await get(ref(db, `bazaar/teams/${id}/owner`));
+        if(ownerSnap.exists() && ownerSnap.val() && ownerSnap.val() !== devId) return alert("Village is already occupied!");
+        
         await update(ref(db, `bazaar/teams/${id}`), { owner: devId, name: name });
         myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); location.reload();
     };
 
     window.tryDashboard = async () => {
         const snap = await get(ref(db, 'dash_lock'));
-        if(snap.exists() && snap.val() !== devId) return alert("Dashboard is already occupied by another device!");
+        if(snap.exists() && snap.val() !== devId) return alert("Dashboard is locked to another device!");
         await set(ref(db, 'dash_lock'), devId);
         localStorage.setItem('v_mode', 'dash');
         location.reload();
@@ -142,7 +147,7 @@
         document.getElementById('game-screen').classList.remove('hidden');
         const v = data.teams[myId];
         document.getElementById('v-header').innerText = v.name || "Village " + myId;
-        document.getElementById('crisis-ui').innerHTML = `<b>${v.crisis.i} ${v.crisis.n}</b><br>Mission: Collect 4 ${v.crisis.g}`;
+        document.getElementById('crisis-ui').innerHTML = `<b>${v.crisis.i} ${v.crisis.n}</b><br>Survival Goal: 4 ${v.crisis.g}`;
         
         const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
         let counts = {};
@@ -154,7 +159,6 @@
             d.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             grid.appendChild(d);
         });
-
         document.getElementById('history-box').innerHTML = (v.history || []).map(h => `<div class="log-entry">${h}</div>`).join('');
         document.getElementById('trade-btn').disabled = !window.selected.size;
         
@@ -165,7 +169,6 @@
 
     window.handleTrade = async () => {
         const target = document.getElementById('trade-target').value;
-        if(!target) return alert("Pick a village!");
         const s = await get(ref(db, 'bazaar')); const data = s.val();
         const items = data.teams[myId].cards.filter(c => window.selected.has(c.id));
         const kept = data.teams[myId].cards.filter(c => !window.selected.has(c.id));
@@ -181,22 +184,18 @@
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-data').innerHTML = Object.entries(data.teams).map(([id, v]) => `
-            <div style="background:#222; margin-bottom:5px; padding:10px; border-radius:8px;">
+            <div style="background:#222; margin-bottom:8px; padding:10px; border-radius:8px;">
                 <b>${v.name || 'Village '+id}</b> [${v.crisis.n}]<br>${(v.cards || []).map(c=>c.emoji).join(' ')}
             </div>
         `).join('');
     }
 
     window.globalReset = async () => {
-        if(!confirm("Wipe all data and restart game?")) return;
+        if(!confirm("ARE YOU SURE? This kicks all students and resets the market!")) return;
+        if(!confirm("LAST WARNING: This will shuffle all 50 cards.")) return;
         
-        // 1. Create strict pool: 10 of each (50 total)
         let pool = [];
-        RES.forEach(r => {
-            for(let i=0; i<10; i++) pool.push({...r, id: Math.random().toString(36).substr(2,9)});
-        });
-        
-        // Shuffle pool
+        RES.forEach(r => { for(let i=0; i<10; i++) pool.push({...r, id: Math.random().toString(36).substr(2,9)}); });
         pool.sort(() => Math.random() - 0.5);
 
         const shufCrises = [...CRISES].sort(() => Math.random() - 0.5);
@@ -204,42 +203,29 @@
 
         for(let t=1; t<=5; t++) {
             const goalResource = shufCrises[t-1].g;
-            const scareResource = RES.find(r => r.n !== goalResource).n; // Pick a secondary resource to limit
+            // Pick a secondary resource for demand (must not be the goal resource)
+            const secondaryResources = RES.filter(r => r.n !== goalResource);
+            const secondaryDemand = secondaryResources[Math.floor(Math.random() * secondaryResources.length)].n;
             
             let hand = [];
-            // Strategy: Pull cards for this team while respecting scarcity
-            // We need 10 cards per team.
+            // Strategy: Enforce scarcity of Goal and Secondary items
             for (let i = pool.length - 1; i >= 0; i--) {
                 const card = pool[i];
-                const goalInHand = hand.filter(c => c.type === goalResource).length;
-                const scareInHand = hand.filter(c => c.type === scareResource).length;
+                const gCount = hand.filter(c => c.type === goalResource).length;
+                const sCount = hand.filter(c => c.type === secondaryDemand).length;
 
-                let canAdd = true;
-                if (card.type === goalResource && goalInHand >= 1) canAdd = false;
-                if (card.type === scareResource && scareInHand >= 1) canAdd = false;
+                let allowed = true;
+                if (card.type === goalResource && gCount >= 1) allowed = false;
+                if (card.type === secondaryDemand && sCount >= 1) allowed = false;
 
-                if (canAdd && hand.length < 10) {
-                    hand.push(pool.splice(i, 1)[0]);
-                }
+                if (allowed && hand.length < 10) { hand.push(pool.splice(i, 1)[0]); }
             }
-
-            // If hand is still not 10 (due to logic constraints), force fill from pool
-            while(hand.length < 10) {
-                hand.push(pool.pop());
-            }
-
-            teams[t] = { 
-                cards: hand, 
-                crisis: shufCrises[t-1], 
-                history: [], 
-                owner: "", 
-                name: "" 
-            };
+            while(hand.length < 10) { hand.push(pool.pop()); }
+            teams[t] = { cards: hand, crisis: shufCrises[t-1], history: [], owner: "", name: "" };
         }
-
         await set(ref(db, 'bazaar'), { teams });
+        await set(ref(db, 'dash_lock'), null); // Unlock dash so it can be re-claimed
         await set(ref(db, 'session'), Math.random().toString(36).substr(2,9));
-        await set(ref(db, 'dash_lock'), devId); // Re-lock dashboard to current admin
     };
 </script>
 </body>
