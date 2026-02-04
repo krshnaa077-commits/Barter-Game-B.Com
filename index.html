@@ -3,99 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏺 Barter Marketplace</title>
+    <title>🏺 Bazaar: Final Edition</title>
     <style>
-        :root {
-            --wood: #2d1b0e;
-            --clay: #a0522d;
-            --gold: #d4af37;
-            --parchment: #f4e4bc;
-            --ink: #3e2723;
-        }
-
-        body {
-            font-family: 'Segoe UI', serif;
-            background: #1a120b;
-            color: var(--parchment);
-            margin: 0; padding: 10px;
-            display: flex; justify-content: center;
-        }
-
-        .app-container {
-            width: 100%; max-width: 420px;
-            background: #231912;
-            border: 4px solid var(--clay);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex; flex-direction: column; height: 94vh;
-            position: relative;
-        }
-
-        header {
-            padding: 20px; text-align: center;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 2px solid var(--gold);
-        }
-
+        :root { --wood: #3e2723; --clay: #8d6e63; --gold: #d4af37; --parchment: #fdf5e6; --ink: #2b1d0e; }
+        body { font-family: 'Palatino', serif; background: #1a0f0a; color: var(--parchment); margin: 0; padding: 10px; display: flex; justify-content: center; overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 420px; background: #2d1b0e; border: 4px solid var(--clay); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; height: 95vh; position: relative; }
+        
+        header { padding: 15px; text-align: center; border-bottom: 2px solid var(--gold); background: rgba(0,0,0,0.3); }
         h1 { margin: 0; font-variant: small-caps; color: var(--gold); letter-spacing: 2px; }
 
         .screen { padding: 15px; flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .hidden { display: none !important; }
 
-        /* Inventory - The "Crates" */
+        /* Inventory Crates */
         .inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .card {
-            background: #3e2723; border: 2px solid #5d4037;
-            border-radius: 8px; padding: 12px 5px; text-align: center;
-            cursor: pointer; transition: 0.2s;
-        }
-        .card.selected { border-color: var(--gold); background: #5d4037; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
-        .emoji { font-size: 2rem; display: block; margin-bottom: 5px; filter: drop-shadow(0 2px 2px black); }
-        .label { font-size: 0.65rem; color: var(--parchment); font-weight: bold; text-transform: uppercase; }
+        .card { background: #4e342e; border: 2px solid #5d4037; border-radius: 6px; padding: 15px 5px; text-align: center; cursor: pointer; transition: 0.1s; }
+        .card.selected { border-color: var(--gold); background: #6d4c41; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .emoji { font-size: 2.2rem; display: block; margin-bottom: 5px; }
+        .label { font-size: 0.6rem; color: #d7ccc8; font-weight: bold; text-transform: uppercase; }
 
-        /* Merchant Ledger */
-        .controls { background: #1a120b; padding: 15px; border-top: 2px solid var(--clay); }
-        select, button { width: 100%; height: 48px; border-radius: 4px; border: none; font-size: 0.9rem; margin-bottom: 8px; font-family: inherit; }
+        /* Role & Trade UI */
+        .contract { background: var(--parchment); color: var(--ink); padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 10px solid var(--gold); font-size: 0.85rem; }
+        .controls { background: #1a0f0a; padding: 15px; border-top: 3px solid var(--clay); }
+        select, button { width: 100%; height: 50px; border-radius: 6px; border: none; font-size: 1rem; margin-bottom: 10px; font-family: inherit; }
         select { background: var(--parchment); color: var(--ink); font-weight: bold; padding: 0 10px; }
-        
-        .btn-trade { 
-            background: var(--clay); color: white; font-weight: bold; 
-            text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 0 #5d2a14;
-        }
-        .btn-trade:active { transform: translateY(2px); box-shadow: 0 2px 0 #5d2a14; }
-        .btn-trade:disabled { opacity: 0.4; filter: grayscale(1); }
+        .btn-trade { background: #a0522d; color: white; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        .btn-trade:disabled { opacity: 0.3; }
 
-        .ledger { 
-            background: var(--parchment); color: var(--ink); 
-            border-radius: 4px; padding: 10px; font-size: 0.75rem; 
-            max-height: 80px; overflow-y: auto; border: 1px inset #8d6e63;
-        }
-        .log-item { border-bottom: 1px dotted var(--ink); padding: 3px 0; display: flex; justify-content: space-between; }
+        .ledger { background: #e7d8b1; color: #4e342e; border-radius: 4px; padding: 10px; font-size: 0.7rem; max-height: 80px; overflow-y: auto; border: 1px solid #8d6e63; }
+        .log-item { border-bottom: 1px dotted #8d6e63; padding: 4px 0; display: flex; justify-content: space-between; }
 
-        /* Goal UI */
-        .contract-card {
-            background: rgba(212, 175, 55, 0.1); border: 1px dashed var(--gold);
-            border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center;
-        }
+        /* Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .reset-btn { background: none; border: 1px solid #444; color: #444; font-size: 0.6rem; margin-top: 10px; cursor: pointer; width: 100%; padding: 5px; }
     </style>
 </head>
 <body>
 
-<div id="win-screen" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <h1 style="font-size:3rem; color:var(--gold);">VICTORY</h1>
-    <p id="win-msg" style="color:white; font-size:1.2rem;"></p>
-    <button class="btn-trade" onclick="location.reload()" style="width:200px;">Back to Market</button>
+<div id="win-screen" class="overlay hidden">
+    <h1 style="font-size:3rem; color:var(--gold);">🏛 VICTORY</h1>
+    <p id="win-msg" style="font-size:1.2rem;"></p>
+    <button class="btn-trade" onclick="location.reload()" style="padding:10px 30px;">Return to Market</button>
+</div>
+
+<div id="reset-overlay" class="overlay hidden">
+    <h2 style="color:var(--gold);">REBUILDING MARKET...</h2>
+    <p>Please wait while stalls are being reorganized.</p>
 </div>
 
 <div class="app-container">
     <header>
         <h1>Bazaar Square</h1>
-        <div id="market-status" style="font-size: 0.6rem; color: var(--gold); opacity: 0.7;">CONNECTED TO MARKET...</div>
+        <div id="status" style="font-size: 0.55rem; color: var(--gold); opacity: 0.7;">CONNECTED</div>
     </header>
 
     <div id="join-screen" class="screen">
         <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
-            <p style="text-align:center; font-style:italic; color:var(--gold);">Claim your merchant stall</p>
+            <p style="text-align:center; font-style:italic; margin-bottom:20px;">Claim your merchant stall</p>
             <select id="pick-team">
                 <option value="1">Merchant Stall I</option>
                 <option value="2">Merchant Stall II</option>
@@ -108,25 +72,23 @@
     </div>
 
     <div id="game-screen" class="screen hidden">
-        <div class="contract-card" id="my-role">
-            <span style="font-size:0.7rem; opacity:0.8;">YOUR CONTRACT:</span>
-            <div id="role-text" style="font-weight:bold; color:var(--gold);">...</div>
+        <div class="contract" id="contract">
+            <b>MERCHANT CONTRACT:</b><br>
+            <span id="role-text">Assigning goods...</span>
         </div>
-        
         <div id="inventory" class="inventory-grid"></div>
-
         <div class="controls">
             <select id="target-team"></select>
             <button id="trade-btn" class="btn-trade" onclick="sendTrade()" disabled>Barter Goods</button>
             <div class="ledger" id="ledger"></div>
-            <p onclick="adminReset()" style="margin-top:10px; color:#444; font-size:0.5rem; text-align:center; cursor:pointer;">[ CLEAR MARKET ]</p>
+            <button class="reset-btn" onclick="adminReset()">[ SYSTEM HARD RESET ]</button>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCw38ORY-168_FWy-Vclfzwxx5RhEVayOM",
@@ -142,15 +104,18 @@
     const db = getDatabase(app);
     const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Produce', e:'🍎'}, {n:'Tools', e:'🔧'}, {n:'Shelter', e:'🏠'}];
     
-    let myTeam = localStorage.getItem('bq_bazaar_v1');
+    let myTeam = localStorage.getItem('bazaar_v7_team');
     let myDevId = getDeviceId();
     let gameState = null;
     let selectedCards = new Set();
 
+    // Listen for Game State
     onValue(ref(db, 'gameState'), (snap) => {
         gameState = snap.val();
-        if(!gameState) initGame();
-        else {
+        if(!gameState) {
+            initGame();
+        } else {
+            document.getElementById('reset-overlay').classList.add('hidden');
             if(myTeam) {
                 document.getElementById('join-screen').classList.add('hidden');
                 document.getElementById('game-screen').classList.remove('hidden');
@@ -163,38 +128,30 @@
 
     window.enterGame = async function() {
         const choice = document.getElementById('pick-team').value;
-        const snap = await get(ref(db, `gameState/teams/${choice}`));
-        if (snap.val().occupied && snap.val().device !== myDevId) return alert("Stall Occupied!");
-        await update(ref(db), { [`gameState/teams/${choice}/occupied`]: true, [`gameState/teams/${choice}/device`]: myDevId });
+        const teamSnap = await get(ref(db, `gameState/teams/${choice}`));
+        const teamData = teamSnap.val();
+        
+        if (teamData.occupied && teamData.device !== myDevId) {
+            return alert("This stall is claimed by another merchant!");
+        }
+        
+        await update(ref(db, `gameState/teams/${choice}`), { occupied: true, device: myDevId });
         myTeam = choice;
-        localStorage.setItem('bq_bazaar_v1', myTeam);
+        localStorage.setItem('bazaar_v7_team', myTeam);
     };
 
     function initGame() {
         let teams = {};
-        let shuffledRes = [...RES].sort(() => Math.random() - 0.5); // Randomize conditions
-        
+        let shuffledRes = [...RES].sort(() => Math.random() - 0.5);
         for(let t=1; t<=5; t++) {
             let cards = [];
-            // Assign Surplus based on shuffled list
             let surplusIdx = t-1;
             let scarcityIdx = t % 5;
-            
             shuffledRes.forEach((r, idx) => {
-                let count = 2;
-                if(idx === surplusIdx) count = 3;
-                if(idx === scarcityIdx) count = 1;
+                let count = (idx === surplusIdx) ? 3 : (idx === scarcityIdx) ? 1 : 2;
                 for(let i=0; i<count; i++) cards.push({ id: Math.random().toString(36).substr(2,7), type: r.n, emoji: r.e });
             });
-
-            teams[t] = { 
-                cards: cards, 
-                logs: [], 
-                occupied: false, 
-                device: "", 
-                surplus: shuffledRes[surplusIdx].n, 
-                scarcity: shuffledRes[scarcityIdx].n 
-            };
+            teams[t] = { cards: cards, logs: [], occupied: false, device: "", surplus: shuffledRes[surplusIdx].n, scarcity: shuffledRes[scarcityIdx].n };
         }
         set(ref(db, 'gameState'), { teams: teams });
     }
@@ -203,9 +160,8 @@
         const team = gameState.teams[myTeam];
         const inv = document.getElementById('inventory');
         inv.innerHTML = '';
+        document.getElementById('role-text').innerHTML = `SURPLUS: <b>${team.surplus}</b> | SCARCITY: <b>${team.scarcity}</b>`;
         
-        document.getElementById('role-text').innerHTML = `SURPLUS: ${team.surplus} | NEED: ${team.scarcity}`;
-
         (team.cards || []).forEach(c => {
             const div = document.createElement('div');
             div.className = `card ${selectedCards.has(c.id) ? 'selected' : ''}`;
@@ -217,8 +173,27 @@
             inv.appendChild(div);
         });
         document.getElementById('trade-btn').disabled = selectedCards.size === 0;
-        document.getElementById('ledger').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "No trades recorded.";
+        document.getElementById('ledger').innerHTML = (team.logs || []).map(l => `<div class="log-item"><span>${l.m}</span><b>${l.t}</b></div>`).join('') || "No deals recorded.";
     }
+
+    window.sendTrade = async function() {
+        const target = document.getElementById('target-team').value;
+        if(!target) return alert("Select a partner!");
+        
+        const team = gameState.teams[myTeam];
+        const items = team.cards.filter(c => selectedCards.has(c.id));
+        const remaining = team.cards.filter(c => !selectedCards.has(c.id));
+        const tradeLog = items.map(i => i.emoji).join('');
+        
+        const updates = {};
+        updates[`gameState/teams/${myTeam}/cards`] = remaining;
+        updates[`gameState/teams/${myTeam}/logs`] = [{m:`To Stall ${target}`, t:tradeLog}, ...(team.logs || [])].slice(0,5);
+        updates[`gameState/teams/${target}/cards`] = [...(gameState.teams[target].cards || []), ...items];
+        updates[`gameState/teams/${target}/logs`] = [{m:`From Stall ${myTeam}`, t:tradeLog}, ...(gameState.teams[target].logs || [])].slice(0,5);
+        
+        await update(ref(db), updates);
+        selectedCards.clear();
+    };
 
     function checkWin() {
         const team = gameState.teams[myTeam];
@@ -227,48 +202,42 @@
         for (let type in counts) {
             if (counts[type] >= 4) {
                 document.getElementById('win-screen').classList.remove('hidden');
-                document.getElementById('win-msg').innerText = `TEAM ${myTeam} COLLECTED 4 ${type.toUpperCase()}`;
+                document.getElementById('win-msg').innerText = `Your Stall has successfully cornered the ${type} market!`;
             }
         }
-    }
-
-    window.sendTrade = function() {
-        const target = document.getElementById('target-team').value;
-        if(!target) return alert("Select a partner.");
-        const team = gameState.teams[myTeam];
-        const items = team.cards.filter(c => selectedCards.has(c.id));
-        const rem = team.cards.filter(c => !selectedCards.has(c.id));
-        const log = items.map(i => i.emoji).join('');
-        
-        const up = {};
-        up[`gameState/teams/${myTeam}/cards`] = rem;
-        up[`gameState/teams/${myTeam}/logs`] = [{m:`Sent to Stall ${target}`, t:log}, ...(team.logs || [])].slice(0,5);
-        up[`gameState/teams/${target}/cards`] = [...(gameState.teams[target].cards || []), ...items];
-        up[`gameState/teams/${target}/logs`] = [{m:`From Stall ${myTeam}`, t:log}, ...(gameState.teams[target].logs || [])].slice(0,5);
-        update(ref(db), up).then(() => { selectedCards.clear(); });
     }
 
     function updateDropdowns() {
         const targetSelect = document.getElementById('target-team');
         const joinSelect = document.getElementById('pick-team');
-        let tHtml = '<option value="">Trade with...</option>';
+        let tHtml = '<option value="">Trade with Stall...</option>';
         for(let i=1; i<=5; i++){
-            if(gameState.teams[i]) {
-                const isTaken = gameState.teams[i].occupied && gameState.teams[i].device !== myDevId;
-                const joinOpt = joinSelect.querySelector(`option[value="${i}"]`);
-                if(joinOpt) joinOpt.disabled = isTaken;
-                if(myTeam && i != myTeam) tHtml += `<option value="${i}">Stall ${i}</option>`;
-            }
+            const tData = gameState.teams[i];
+            const isTakenByOther = tData.occupied && tData.device !== myDevId;
+            const opt = joinSelect.querySelector(`option[value="${i}"]`);
+            if(opt) opt.disabled = isTakenByOther;
+            if(myTeam && i != myTeam) tHtml += `<option value="${i}">Stall ${i}</option>`;
         }
         targetSelect.innerHTML = tHtml;
     }
 
-    window.adminReset = function() {
-        if(confirm("Burn the market?")) { localStorage.clear(); set(ref(db, 'gameState'), null).then(() => location.reload()); }
-    }
+    window.adminReset = async function() {
+        if(!confirm("⚠️ TOTAL WIPE: This will clear all teams and reshuffle resources. Proceed?")) return;
+        
+        document.getElementById('reset-overlay').classList.remove('hidden');
+        localStorage.clear(); // Clear local team choice and ID
+        
+        try {
+            await remove(ref(db, 'gameState')); // Delete DB node
+            location.reload(); // Hard refresh browser
+        } catch (e) {
+            alert("Reset Error: " + e.message);
+        }
+    };
+
     function getDeviceId() {
-        let id = localStorage.getItem('bq_dev_bazaar');
-        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bq_dev_bazaar', id); }
+        let id = localStorage.getItem('bazaar_v7_dev');
+        if(!id) { id = Math.random().toString(36).substr(2, 9); localStorage.setItem('bazaar_v7_dev', id); }
         return id;
     }
 </script>
