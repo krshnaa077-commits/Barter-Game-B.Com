@@ -3,37 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏺 Crisis Bazaar v12</title>
+    <title>🏺 Crisis Bazaar</title>
     <style>
         :root { --gold: #d4af37; --bg: #0d0d0d; --card: #1a1a1a; --red: #ff5252; --blue: #448aff; --green: #4caf50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 10px; }
-        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 15px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; position: relative;}
+        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 15px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; }
         header { padding: 10px; text-align: center; border-bottom: 2px solid var(--gold); background: #111; }
         .screen { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
+
         .crisis-box { background: #fff; color: #000; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 10px solid var(--red); }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
         .card { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; }
         .card.selected { border-color: var(--gold); background: #3d3d29; transform: scale(0.95); }
         .emoji { font-size: 1.8rem; display: block; }
         .label { font-size: 0.5rem; color: #888; text-transform: uppercase; }
-        .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
-        .log-entry { border-bottom: 1px solid #222; padding: 4px 0; color: #aaa; }
+
         button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; }
         .btn-main { background: var(--gold); color: #000; }
         .btn-trade { background: var(--blue); color: white; width: 100%; }
         .btn-nav { background: #333; color: white; font-size: 0.8rem; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; }
+        
+        .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
         #status-dot { height: 8px; width: 8px; background: var(--red); border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online #status-dot { background: var(--green); }
     </style>
 </head>
 <body>
-
-<div id="win-overlay" class="screen hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:1000; text-align:center; justify-content:center;">
-    <h1 style="color:var(--gold); font-size: 3rem;">🏺</h1>
-    <h2>VILLAGE SAVED!</h2>
-    <button class="btn-main" onclick="location.reload()">Continue</button>
-</div>
 
 <div class="app-container">
     <header>
@@ -42,34 +39,32 @@
     </header>
 
     <div id="join-screen" class="screen">
-        <input type="text" id="v-name-input" placeholder="Enter Village Name" style="padding:12px; border-radius:8px; border:1px solid #444; background:#222; color:white; margin-bottom:10px;">
-        <select id="v-select" style="padding:15px; background:#333; color:white; border-radius:8px; margin-bottom:10px;">
-            <option value="1">Village of the East</option>
-            <option value="2">Village of the West</option>
-            <option value="3">Village of the North</option>
-            <option value="4">Village of the South</option>
-            <option value="5">Village of the Peaks</option>
+        <input type="text" id="v-name-input" placeholder="Village Name (e.g. Iron Tribe)">
+        <select id="v-select">
+            <option value="1">Village 1</option><option value="2">Village 2</option>
+            <option value="3">Village 3</option><option value="4">Village 4</option>
+            <option value="5">Village 5</option>
         </select>
-        <button class="btn-main" onclick="joinVillage()">Join as Elder</button>
-        <button class="btn-nav" onclick="showDashboard()">Global Dashboard</button>
+        <button class="btn-main" onclick="joinVillage()">Enter Village</button>
+        <button class="btn-nav" onclick="tryDashboard()">Global Dashboard</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
         <div id="crisis-ui" class="crisis-box"></div>
         <div id="inventory-grid" class="grid"></div>
         <div style="margin-top:auto;">
-            <select id="trade-target" style="width:100%; padding:12px; background:#333; color:white; border-radius:8px; margin-bottom:10px;"></select>
+            <select id="trade-target" style="width:100%;"></select>
             <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Barter Goods</button>
             <div id="history-box" class="history-list"></div>
-            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Menu</button>
+            <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Back to Menu</button>
         </div>
     </div>
 
     <div id="dash-screen" class="screen hidden">
-        <h3>Dashboard</h3>
+        <h3>Live Market (Locked)</h3>
         <div id="dash-data"></div>
-        <button class="btn-main" style="background:var(--red); color:white; width:100%; margin-top:10px;" onclick="globalReset()">FULL RESET & RESHUFFLE</button>
-        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close</button>
+        <button class="btn-main" style="background:var(--red); color:white; width:100%;" onclick="globalReset()">FULL RESET & RESHUFFLE</button>
+        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Exit Dashboard</button>
     </div>
 </div>
 
@@ -89,7 +84,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const RES = [{n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, {n:'Wood', e:'🪵'}, {n:'Tools', e:'🔧'}, {n:'Shelter', e:'🏠'}];
+    const RES = [
+        {n:'Rice', e:'🍚'}, {n:'Cattle', e:'🐄'}, 
+        {n:'Wood', e:'🪵'}, {n:'Tools', e:'🔧'}, {n:'Shelter', e:'🏠'}
+    ];
     const CRISES = [
         { n: "Flood", g: "Cattle", i: "🌊" }, { n: "Plague", g: "Shelter", i: "🦠" },
         { n: "Drought", g: "Rice", i: "☀️" }, { n: "War", g: "Tools", i: "⚔️" },
@@ -105,10 +103,11 @@
 
     onValue(ref(db, '.info/connected'), (s) => {
         document.body.classList.toggle('online', s.val());
-        document.getElementById('status-text').innerText = s.val() ? "Online" : "Connecting...";
+        document.getElementById('status-text').innerText = s.val() ? "Sync Active" : "Syncing...";
     });
 
     onValue(ref(db, 'session'), (s) => {
+        if(!s.val()) return;
         if(!session) session = s.val();
         else if(session !== s.val()) { localStorage.clear(); location.reload(); }
     });
@@ -123,20 +122,27 @@
         const id = document.getElementById('v-select').value;
         const name = document.getElementById('v-name-input').value || "Village " + id;
         const s = await get(ref(db, `bazaar/teams/${id}/owner`));
-        if(s.exists() && s.val() && s.val() !== devId) return alert("Village Occupied!");
+        if(s.exists() && s.val() && s.val() !== devId) return alert("Village Led by Another Elder!");
         await update(ref(db, `bazaar/teams/${id}`), { owner: devId, name: name });
         myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); location.reload();
     };
 
-    window.showDashboard = () => { localStorage.setItem('v_mode', 'dash'); location.reload(); };
+    window.tryDashboard = async () => {
+        const snap = await get(ref(db, 'dash_lock'));
+        if(snap.exists() && snap.val() !== devId) return alert("Dashboard is already occupied by another device!");
+        await set(ref(db, 'dash_lock'), devId);
+        localStorage.setItem('v_mode', 'dash');
+        location.reload();
+    };
+
     window.backToMenu = () => { localStorage.removeItem('v_mode'); location.reload(); };
 
     function renderGame(data) {
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
         const v = data.teams[myId];
-        document.getElementById('v-header').innerText = v.name;
-        document.getElementById('crisis-ui').innerHTML = `<b>${v.crisis.i} ${v.crisis.n}</b><br>Need 4 ${v.crisis.g}`;
+        document.getElementById('v-header').innerText = v.name || "Village " + myId;
+        document.getElementById('crisis-ui').innerHTML = `<b>${v.crisis.i} ${v.crisis.n}</b><br>Mission: Collect 4 ${v.crisis.g}`;
         
         const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
         let counts = {};
@@ -152,15 +158,14 @@
         document.getElementById('history-box').innerHTML = (v.history || []).map(h => `<div class="log-entry">${h}</div>`).join('');
         document.getElementById('trade-btn').disabled = !window.selected.size;
         
-        let opt = '<option value="">Trade with...</option>';
+        let opt = '<option value="">Barter with...</option>';
         for(let i=1; i<=5; i++) if(i!=myId) opt += `<option value="${i}">${data.teams[i].name || "Village "+i}</option>`;
         document.getElementById('trade-target').innerHTML = opt;
-
-        if(counts[v.crisis.g] >= 4) document.getElementById('win-overlay').classList.remove('hidden');
     }
 
     window.handleTrade = async () => {
         const target = document.getElementById('trade-target').value;
+        if(!target) return alert("Pick a village!");
         const s = await get(ref(db, 'bazaar')); const data = s.val();
         const items = data.teams[myId].cards.filter(c => window.selected.has(c.id));
         const kept = data.teams[myId].cards.filter(c => !window.selected.has(c.id));
@@ -176,34 +181,65 @@
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-data').innerHTML = Object.entries(data.teams).map(([id, v]) => `
-            <div style="background:#222; margin-bottom:5px; padding:8px; border-radius:5px;">
-                <b>${v.name || 'Village '+id}</b> (${v.cards?.length || 0} cards)<br>${(v.cards || []).map(c=>c.emoji).join(' ')}
+            <div style="background:#222; margin-bottom:5px; padding:10px; border-radius:8px;">
+                <b>${v.name || 'Village '+id}</b> [${v.crisis.n}]<br>${(v.cards || []).map(c=>c.emoji).join(' ')}
             </div>
         `).join('');
     }
 
     window.globalReset = async () => {
-        if(!confirm("Reset EVERYTHING?")) return;
-        const shuf = [...CRISES].sort(() => Math.random() - 0.5);
+        if(!confirm("Wipe all data and restart game?")) return;
+        
+        // 1. Create strict pool: 10 of each (50 total)
+        let pool = [];
+        RES.forEach(r => {
+            for(let i=0; i<10; i++) pool.push({...r, id: Math.random().toString(36).substr(2,9)});
+        });
+        
+        // Shuffle pool
+        pool.sort(() => Math.random() - 0.5);
+
+        const shufCrises = [...CRISES].sort(() => Math.random() - 0.5);
         let teams = {};
+
         for(let t=1; t<=5; t++) {
-            let cards = [];
-            let counts = { Rice:0, Cattle:0, Wood:0, Tools:0, Shelter:0 };
-            const goal = shuf[t-1].g;
-            // FIX: Draw exactly 10 cards
-            while(cards.length < 10) {
-                let r = RES[Math.floor(Math.random()*RES.length)];
-                if(counts[r.n] < 3) {
-                    // Try to avoid the goal card, but if we need a card to reach 10, eventually allow it
-                    if(r.n === goal && Math.random() > 0.1 && cards.length < 8) continue;
-                    counts[r.n]++;
-                    cards.push({ id: Math.random().toString(36).substr(2,7), type: r.n, emoji: r.e });
+            const goalResource = shufCrises[t-1].g;
+            const scareResource = RES.find(r => r.n !== goalResource).n; // Pick a secondary resource to limit
+            
+            let hand = [];
+            // Strategy: Pull cards for this team while respecting scarcity
+            // We need 10 cards per team.
+            for (let i = pool.length - 1; i >= 0; i--) {
+                const card = pool[i];
+                const goalInHand = hand.filter(c => c.type === goalResource).length;
+                const scareInHand = hand.filter(c => c.type === scareResource).length;
+
+                let canAdd = true;
+                if (card.type === goalResource && goalInHand >= 1) canAdd = false;
+                if (card.type === scareResource && scareInHand >= 1) canAdd = false;
+
+                if (canAdd && hand.length < 10) {
+                    hand.push(pool.splice(i, 1)[0]);
                 }
             }
-            teams[t] = { cards, crisis: shuf[t-1], history: [], owner: "", name: "" };
+
+            // If hand is still not 10 (due to logic constraints), force fill from pool
+            while(hand.length < 10) {
+                hand.push(pool.pop());
+            }
+
+            teams[t] = { 
+                cards: hand, 
+                crisis: shufCrises[t-1], 
+                history: [], 
+                owner: "", 
+                name: "" 
+            };
         }
+
         await set(ref(db, 'bazaar'), { teams });
         await set(ref(db, 'session'), Math.random().toString(36).substr(2,9));
+        await set(ref(db, 'dash_lock'), devId); // Re-lock dashboard to current admin
     };
 </script>
 </body>
