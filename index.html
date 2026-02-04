@@ -12,7 +12,11 @@
         .screen { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
 
+        /* Crisis & Demand */
         .crisis-box { background: #fff; color: #000; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 10px solid var(--red); }
+        .demand-tag { font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #444; font-weight: bold; }
+
+        /* Grid */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
         .card { background: #252525; border: 1px solid #444; border-radius: 8px; padding: 12px 5px; text-align: center; cursor: pointer; }
         .card.selected { border-color: var(--gold); background: #3d3d29; transform: scale(0.95); }
@@ -23,9 +27,9 @@
         .btn-main { background: var(--gold); color: #000; }
         .btn-trade { background: var(--blue); color: white; width: 100%; }
         .btn-nav { background: #333; color: white; font-size: 0.8rem; }
-        .btn-danger { background: #b71c1c; color: white; font-size: 0.75rem; margin-top: 25px; border: 1px solid #ff5252; }
+        .btn-danger { background: #b71c1c; color: white; border: 1px solid #ff5252; margin-top: 30px;}
         
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; font-size: 1rem;}
         .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
         #status-dot { height: 8px; width: 8px; background: var(--red); border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online #status-dot { background: var(--green); }
@@ -40,18 +44,17 @@
     </header>
 
     <div id="join-screen" class="screen">
-        <input type="text" id="v-name-input" placeholder="Village Name (e.g. Iron Tribe)">
+        <input type="text" id="v-name-input" placeholder="Enter Village Name">
         <select id="v-select">
             <option value="1">Village 1</option><option value="2">Village 2</option>
             <option value="3">Village 3</option><option value="4">Village 4</option>
             <option value="5">Village 5</option>
         </select>
-        <button class="btn-main" onclick="joinVillage()">Enter Village</button>
-        <button class="btn-nav" onclick="tryDashboard()">Global Dashboard</button>
+        <button class="btn-main" onclick="joinVillage()">Join as Elder</button>
+        <button class="btn-nav" onclick="tryDashboard()">Market Dashboard</button>
         
-        <hr style="width:100%; border: 0; border-top: 1px solid #333; margin: 20px 0;">
-        <button class="btn-danger" onclick="globalReset()">FACTORY RESET (Admin Only)</button>
-        <p style="font-size: 0.6rem; color: #666; text-align: center;">Resets cards and kicks everyone to menu.</p>
+        <button class="btn-danger" onclick="factoryReset()">⚠️ FACTORY RESET GAME</button>
+        <p style="font-size: 0.6rem; color: #666; text-align: center;">Required once at start of class.</p>
     </div>
 
     <div id="game-screen" class="screen hidden">
@@ -59,16 +62,16 @@
         <div id="inventory-grid" class="grid"></div>
         <div style="margin-top:auto;">
             <select id="trade-target" style="width:100%;"></select>
-            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Barter Goods</button>
+            <button id="trade-btn" class="btn-trade" onclick="handleTrade()" disabled>Propose Barter</button>
             <div id="history-box" class="history-list"></div>
             <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Back to Menu</button>
         </div>
     </div>
 
     <div id="dash-screen" class="screen hidden">
-        <h3 style="margin:0 0 10px 0;">Market Dashboard (Locked)</h3>
+        <h3 style="margin:0 0 10px 0;">Market Census</h3>
         <div id="dash-data"></div>
-        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Exit Dashboard</button>
+        <button class="btn-nav" style="width:100%;" onclick="backToMenu()">Close Dashboard</button>
     </div>
 </div>
 
@@ -121,13 +124,13 @@
 
     window.joinVillage = async () => {
         const id = document.getElementById('v-select').value;
-        const name = document.getElementById('v-name-input').value || "Village " + id;
-        const snap = await get(ref(db, 'bazaar'));
-        if(!snap.exists()) return alert("Market is empty. Click Factory Reset first.");
+        const name = document.getElementById('v-name-input').value || "Unnamed Village";
+        const snap = await get(ref(db, 'bazaar/teams/' + id));
+        if(!snap.exists()) return alert("Market not initialized. Run Factory Reset first.");
         
-        const ownerSnap = await get(ref(db, `bazaar/teams/${id}/owner`));
-        if(ownerSnap.exists() && ownerSnap.val() && ownerSnap.val() !== devId) return alert("Village is already occupied!");
-        
+        const vData = snap.val();
+        if(vData.owner && vData.owner !== devId) return alert("This village already has an Elder!");
+
         await update(ref(db, `bazaar/teams/${id}`), { owner: devId, name: name });
         myId = id; localStorage.setItem('v_id', id); localStorage.setItem('v_mode', 'game'); location.reload();
     };
@@ -136,29 +139,36 @@
         const snap = await get(ref(db, 'dash_lock'));
         if(snap.exists() && snap.val() !== devId) return alert("Dashboard is locked to another device!");
         await set(ref(db, 'dash_lock'), devId);
-        localStorage.setItem('v_mode', 'dash');
-        location.reload();
+        localStorage.setItem('v_mode', 'dash'); location.reload();
     };
 
     window.backToMenu = () => { localStorage.removeItem('v_mode'); location.reload(); };
 
     function renderGame(data) {
+        const v = data.teams[myId];
+        if(!v || !v.crisis) return; // Prevent "undefined" crash
+
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
-        const v = data.teams[myId];
         document.getElementById('v-header').innerText = v.name || "Village " + myId;
-        document.getElementById('crisis-ui').innerHTML = `<b>${v.crisis.i} ${v.crisis.n}</b><br>Survival Goal: 4 ${v.crisis.g}`;
+        
+        document.getElementById('crisis-ui').innerHTML = `
+            <div style="font-weight:bold; font-size:1.1rem;">${v.crisis.i} ${v.crisis.n}</div>
+            <div style="margin-top:5px;">
+                <span class="demand-tag">Need: 4 ${v.crisis.g}</span>
+                <span class="demand-tag">Scarcity: ${v.secDemand}</span>
+            </div>
+        `;
         
         const grid = document.getElementById('inventory-grid'); grid.innerHTML = '';
-        let counts = {};
         (v.cards || []).forEach(c => {
-            counts[c.type] = (counts[c.type] || 0) + 1;
             const d = document.createElement('div');
             d.className = `card ${window.selected.has(c.id) ? 'selected' : ''}`;
             d.onclick = () => { window.selected.has(c.id) ? window.selected.delete(c.id) : window.selected.add(c.id); renderGame(data); };
             d.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.type}</span>`;
             grid.appendChild(d);
         });
+
         document.getElementById('history-box').innerHTML = (v.history || []).map(h => `<div class="log-entry">${h}</div>`).join('');
         document.getElementById('trade-btn').disabled = !window.selected.size;
         
@@ -184,15 +194,16 @@
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-data').innerHTML = Object.entries(data.teams).map(([id, v]) => `
-            <div style="background:#222; margin-bottom:8px; padding:10px; border-radius:8px;">
-                <b>${v.name || 'Village '+id}</b> [${v.crisis.n}]<br>${(v.cards || []).map(c=>c.emoji).join(' ')}
+            <div style="background:#222; margin-bottom:8px; padding:10px; border-radius:8px; border-left: 4px solid var(--gold);">
+                <b>${v.name || 'Village '+id}</b> [${v.crisis.n}]<br>
+                <div style="font-size:1.1rem; margin: 4px 0;">${(v.cards || []).map(c=>c.emoji).join(' ')}</div>
+                <small style="color:#888;">Primary: ${v.crisis.g} | Secondary: ${v.secDemand}</small>
             </div>
         `).join('');
     }
 
-    window.globalReset = async () => {
-        if(!confirm("ARE YOU SURE? This kicks all students and resets the market!")) return;
-        if(!confirm("LAST WARNING: This will shuffle all 50 cards.")) return;
+    window.factoryReset = async () => {
+        if(!confirm("Factory Reset will wipe all villages and re-shuffle all 50 cards. Proceed?")) return;
         
         let pool = [];
         RES.forEach(r => { for(let i=0; i<10; i++) pool.push({...r, id: Math.random().toString(36).substr(2,9)}); });
@@ -202,30 +213,37 @@
         let teams = {};
 
         for(let t=1; t<=5; t++) {
-            const goalResource = shufCrises[t-1].g;
-            // Pick a secondary resource for demand (must not be the goal resource)
-            const secondaryResources = RES.filter(r => r.n !== goalResource);
-            const secondaryDemand = secondaryResources[Math.floor(Math.random() * secondaryResources.length)].n;
+            const primaryGoal = shufCrises[t-1].g;
+            const otherRes = RES.filter(r => r.n !== primaryGoal);
+            const secondaryDemand = otherRes[Math.floor(Math.random() * otherRes.length)].n;
             
             let hand = [];
-            // Strategy: Enforce scarcity of Goal and Secondary items
             for (let i = pool.length - 1; i >= 0; i--) {
                 const card = pool[i];
-                const gCount = hand.filter(c => c.type === goalResource).length;
+                const gCount = hand.filter(c => c.type === primaryGoal).length;
                 const sCount = hand.filter(c => c.type === secondaryDemand).length;
 
-                let allowed = true;
-                if (card.type === goalResource && gCount >= 1) allowed = false;
-                if (card.type === secondaryDemand && sCount >= 1) allowed = false;
+                // Demand Logic: Village starts with almost 0 of Primary and Secondary resources
+                if (card.type === primaryGoal && gCount >= 1) continue;
+                if (card.type === secondaryDemand && sCount >= 1) continue;
 
-                if (allowed && hand.length < 10) { hand.push(pool.splice(i, 1)[0]); }
+                if (hand.length < 10) { hand.push(pool.splice(i, 1)[0]); }
             }
             while(hand.length < 10) { hand.push(pool.pop()); }
-            teams[t] = { cards: hand, crisis: shufCrises[t-1], history: [], owner: "", name: "" };
+
+            teams[t] = { 
+                cards: hand, 
+                crisis: shufCrises[t-1], 
+                secDemand: secondaryDemand,
+                history: [], 
+                owner: "", 
+                name: "Village " + t 
+            };
         }
         await set(ref(db, 'bazaar'), { teams });
-        await set(ref(db, 'dash_lock'), null); // Unlock dash so it can be re-claimed
+        await set(ref(db, 'dash_lock'), null);
         await set(ref(db, 'session'), Math.random().toString(36).substr(2,9));
+        alert("Game Reset Complete!");
     };
 </script>
 </body>
