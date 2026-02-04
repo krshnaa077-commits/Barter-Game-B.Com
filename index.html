@@ -7,7 +7,7 @@
     <style>
         :root { --gold: #d4af37; --bg: #0d0d0d; --card: #1a1a1a; --red: #ff5252; --blue: #448aff; --green: #4caf50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 10px; }
-        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 15px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; }
+        .app-container { width: 100%; max-width: 450px; background: var(--card); border-radius: 15px; display: flex; flex-direction: column; height: 96vh; margin: auto; overflow: hidden; border: 1px solid #333; position: relative;}
         header { padding: 10px; text-align: center; border-bottom: 2px solid var(--gold); background: #111; }
         .screen { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .hidden { display: none !important; }
@@ -19,7 +19,7 @@
         .emoji { font-size: 1.8rem; display: block; }
         .label { font-size: 0.5rem; color: #888; text-transform: uppercase; }
 
-        .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; }
+        .history-list { font-size: 0.7rem; background: #000; padding: 8px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; border: 1px solid #222;}
         .log-entry { border-bottom: 1px solid #222; padding: 4px 0; color: #aaa; }
 
         button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
@@ -27,6 +27,7 @@
         .btn-trade { background: var(--blue); color: white; width: 100%; }
         .btn-nav { background: #333; color: white; font-size: 0.8rem; }
         .btn-reset { background: #b71c1c; color: white; font-size: 0.7rem; margin-top: 20px; }
+        input { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; }
         
         #status-dot { height: 8px; width: 8px; background: var(--red); border-radius: 50%; display: inline-block; margin-right: 5px; }
         .online #status-dot { background: var(--green); }
@@ -42,15 +43,15 @@
 
 <div class="app-container">
     <header>
-        <h2 style="margin:0; color:var(--gold); font-size: 1.1rem;">VILLAGE BAZAAR</h2>
+        <h2 id="village-title-ui" style="margin:0; color:var(--gold); font-size: 1.1rem;">VILLAGE BAZAAR</h2>
         <div id="connection-status" style="font-size: 0.6rem; color: #888;">
             <span id="status-dot"></span> <span id="status-text">Connecting...</span>
         </div>
     </header>
 
     <div id="join-screen" class="screen">
-        <p style="text-align:center; font-size:0.9rem;">The Council of Elders awaits your arrival.</p>
-        <select id="pick-village" style="padding:15px; background:#333; color:white; border-radius:8px; border:1px solid #555; font-size:1rem;">
+        <input type="text" id="village-name" placeholder="Enter Village Name (e.g. Iron Tribe)">
+        <select id="pick-village" style="padding:15px; background:#333; color:white; border-radius:8px; border:1px solid #555; font-size:1rem; margin-bottom:10px;">
             <option value="1">Village of the East</option>
             <option value="2">Village of the West</option>
             <option value="3">Village of the North</option>
@@ -59,7 +60,6 @@
         </select>
         <button class="btn-main" onclick="enterVillage()">Join as Elder</button>
         <button class="btn-nav" onclick="enterDashboard()">Global Dashboard</button>
-        <button class="btn-reset" onclick="clearDeviceData()">Reset This Device</button>
     </div>
 
     <div id="game-screen" class="screen hidden">
@@ -76,7 +76,7 @@
     <div id="dash-screen" class="screen hidden">
         <h3 style="margin-top:0;">Global Market Overview</h3>
         <div id="dash-list"></div>
-        <button class="btn-main" style="background:var(--red); color:white; width:100%;" onclick="fullReset()">Wipe & Reshuffle All Cards</button>
+        <button class="btn-main" style="background:var(--red); color:white; width:100%;" onclick="fullReset()">RESET ENTIRE GAME (All Devices)</button>
         <button class="btn-nav" style="width:100%;" onclick="exitToMenu()">Close Dashboard</button>
     </div>
 </div>
@@ -109,12 +109,25 @@
     let currentVillage = localStorage.getItem('v_id');
     let viewMode = localStorage.getItem('v_mode');
     let deviceId = localStorage.getItem('v_device') || Math.random().toString(36).substr(2,9);
+    let gameSession = ""; 
     localStorage.setItem('v_device', deviceId);
     window.selectedCards = new Set();
 
     onValue(ref(db, '.info/connected'), (snap) => {
         if (snap.val() === true) { document.body.classList.add('online'); document.getElementById('status-text').innerText = "Network Online"; }
         else { document.body.classList.remove('online'); document.getElementById('status-text').innerText = "Connecting..."; }
+    });
+
+    // FORCE RESET LISTENER
+    onValue(ref(db, 'marketSession'), (snap) => {
+        const serverSession = snap.val();
+        if(!gameSession) { gameSession = serverSession; }
+        else if(serverSession !== gameSession) {
+            // If the teacher has changed the session ID, wipe local data and refresh
+            localStorage.removeItem('v_id');
+            localStorage.removeItem('v_mode');
+            location.reload();
+        }
     });
 
     onValue(ref(db, 'bazaar'), (snap) => {
@@ -126,13 +139,14 @@
 
     window.enterVillage = async () => {
         const choice = document.getElementById('pick-village').value;
+        const name = document.getElementById('village-name').value || "Unnamed Tribe";
         const snap = await get(ref(db, `bazaar/teams/${choice}/owner`));
         
-        if(snap.exists() && snap.val() !== deviceId) {
-            return alert("This village is already being led by another device!");
+        if(snap.exists() && snap.val() && snap.val() !== deviceId) {
+            return alert("This village is already being led!");
         }
 
-        await update(ref(db, `bazaar/teams/${choice}`), { owner: deviceId });
+        await update(ref(db, `bazaar/teams/${choice}`), { owner: deviceId, customName: name });
         currentVillage = choice;
         localStorage.setItem('v_id', choice);
         localStorage.setItem('v_mode', 'game');
@@ -141,12 +155,13 @@
 
     window.enterDashboard = () => { localStorage.setItem('v_mode', 'dash'); location.reload(); };
     window.exitToMenu = () => { localStorage.removeItem('v_mode'); location.reload(); };
-    window.clearDeviceData = () => { if(confirm("Clear village identity?")) { localStorage.clear(); location.reload(); } };
 
     function renderGame(state) {
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
         const village = state.teams[currentVillage];
+        document.getElementById('village-title-ui').innerText = village.customName || "Village " + currentVillage;
+        
         const inv = document.getElementById('inventory');
         inv.innerHTML = '';
         
@@ -172,7 +187,12 @@
         document.getElementById('trade-btn').disabled = !window.selectedCards.size;
         
         let tHtml = '<option value="">Trade with Village...</option>';
-        for(let i=1; i<=5; i++) if(i != currentVillage) tHtml += `<option value="${i}">Village ${i}</option>`;
+        for(let i=1; i<=5; i++) {
+            if(i != currentVillage) {
+                const other = state.teams[i];
+                tHtml += `<option value="${i}">${other.customName || "Village "+i}</option>`;
+            }
+        }
         document.getElementById('target-village').innerHTML = tHtml;
 
         if(counts[village.crisis.goal] >= 4) document.getElementById('win-overlay').classList.remove('hidden');
@@ -187,9 +207,9 @@
         const kept = state.teams[currentVillage].cards.filter(c => !window.selectedCards.has(c.id));
         const up = {};
         up[`bazaar/teams/${currentVillage}/cards`] = kept;
-        up[`bazaar/teams/${currentVillage}/history`] = [`Sent ${items.length} goods to Village ${target}`, ...(state.teams[currentVillage].history || [])].slice(0, 5);
+        up[`bazaar/teams/${currentVillage}/history`] = [`Sent ${items.length} goods to ${state.teams[target].customName || 'Village '+target}`, ...(state.teams[currentVillage].history || [])].slice(0, 5);
         up[`bazaar/teams/${target}/cards`] = [...(state.teams[target].cards || []), ...items];
-        up[`bazaar/teams/${target}/history`] = [`Got ${items.length} goods from Village ${currentVillage}`, ...(state.teams[target].history || [])].slice(0, 5);
+        up[`bazaar/teams/${target}/history`] = [`Got ${items.length} goods from ${state.teams[currentVillage].customName || 'Village '+currentVillage}`, ...(state.teams[target].history || [])].slice(0, 5);
         
         await update(ref(db), up);
         window.selectedCards.clear();
@@ -200,12 +220,15 @@
         document.getElementById('dash-screen').classList.remove('hidden');
         document.getElementById('dash-list').innerHTML = Object.entries(state.teams).map(([id, v]) => `
             <div style="background:#222; padding:10px; border-radius:10px; margin-bottom:10px;">
-                <b>Village ${id} (${v.crisis.name}):</b> ${v.cards.map(c=>c.emoji).join(' ')}
+                <b>${v.customName || "Village " + id} (${v.crisis.name}):</b><br> 
+                ${v.cards.map(c=>c.emoji).join(' ')}
             </div>
         `).join('');
     }
 
     window.fullReset = async () => {
+        if(!confirm("This will force ALL devices back to the menu and shuffle cards. Continue?")) return;
+        const newSessionId = Math.random().toString(36).substr(2, 9);
         const shuffled = [...CRISES].sort(() => Math.random() - 0.5);
         let teams = {};
         for(let t=1; t<=5; t++) {
@@ -219,10 +242,10 @@
                     cards.push({ id: Math.random().toString(36).substr(2,7), type: r.n, emoji: r.e });
                 }
             }
-            teams[t] = { cards, crisis: shuffled[t-1], history: [], owner: "" };
+            teams[t] = { cards, crisis: shuffled[t-1], history: [], owner: "", customName: "" };
         }
         await set(ref(db, 'bazaar'), { teams });
-        location.reload();
+        await set(ref(db, 'marketSession'), newSessionId); // Signal force-refresh
     };
 </script>
 </body>
